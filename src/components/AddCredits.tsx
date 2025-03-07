@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, CreditCard, Loader, Wallet, X } from 'lucide-react';
 import { useCreditsStore } from '../store/useCreditsStore';
-import { loadStripe } from '@stripe/stripe-js';
+import { playSound, preloadSound } from '../utils/audio';
+import useAudioContext from '../utils/useAudioContext';
 
 const CREDIT_PACKAGES = [
   { credits: 100, price: 5 },
@@ -20,6 +21,12 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'crypto' | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | null>(null);
   const { addCredits } = useCreditsStore();
+  const { audioContext } = useAudioContext();
+
+  // Preload the cash register sound when component mounts
+  useEffect(() => {
+    preloadSound('cash-register');
+  }, []);
 
   const handleCardPayment = async () => {
     if (!selectedPackage) return;
@@ -27,9 +34,12 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setPaymentStatus('processing');
     
     // Simulate card payment processing
-    setTimeout(() => {
+    setTimeout(async () => {
       setPaymentStatus('success');
       addCredits(selectedPackage.credits);
+      
+      // Play cash register sound on successful payment
+      await playSound('cash-register', 'mp3', 0.7, audioContext);
       
       // Close modal after showing success
       setTimeout(() => {
@@ -44,9 +54,12 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setPaymentStatus('processing');
     
     // Simulate transaction confirmation
-    setTimeout(() => {
+    setTimeout(async () => {
       setPaymentStatus('success');
       addCredits(selectedPackage.credits);
+      
+      // Play cash register sound on successful payment
+      await playSound('cash-register', 'mp3', 0.7, audioContext);
       
       // Close modal after showing success
       setTimeout(() => {
