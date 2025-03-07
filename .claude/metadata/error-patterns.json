@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "patterns": {
+    "audio-playback": {
+      "symptoms": [
+        "The play() request was interrupted by a call to pause()",
+        "Failed to load because no supported source was found"
+      ],
+      "solutions": {
+        "cleanup": "Ensure audio resources are properly cleaned up on component unmount",
+        "loading": "Verify audio source availability before attempting playback",
+        "state": "Track audio element state to prevent race conditions"
+      }
+    }
+  }
+}

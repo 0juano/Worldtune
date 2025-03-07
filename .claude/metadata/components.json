@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "components": {
+    "Dial": {
+      "path": "src/components/Dial.tsx",
+      "type": "implementation",
+      "dependencies": ["AICallAssistant", "AddCredits", "CallingAnimation"],
+      "state": {
+        "number": "string",
+        "aiWaiting": "boolean",
+        "showPromptInput": "boolean",
+        "showAddCredits": "boolean",
+        "isLongPressing": "boolean",
+        "isCalling": "boolean"
+      },
+      "patterns": ["keyboard-input", "long-press", "animation"],
+      "knownIssues": {
+        "audio-interruption": {
+          "description": "Audio playback can be interrupted during component unmount",
+          "solution": "Implement proper cleanup of audio resources"
+        }
+      }
+    }
+  }
+}

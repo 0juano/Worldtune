@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "nodes": {
+    "App": {
+      "imports": ["Layout", "Home", "Dial"],
+      "stores": ["useThemeStore", "useNavigationStore"]
+    },
+    "Layout": {
+      "imports": ["ThemeToggle"],
+      "stores": ["useNavigationStore"]
+    },
+    "Dial": {
+      "imports": ["AICallAssistant", "AddCredits", "CallingAnimation"],
+      "stores": ["useCreditsStore"]
+    }
+  }
+}
