@@ -1,0 +1,36 @@
+{
+  "classifications": {
+    "src/App.tsx": {
+      "type": "implementation",
+      "description": "Main application component that serves as the entry point for the UI"
+    },
+    "src/main.tsx": {
+      "type": "implementation",
+      "description": "Application entry point that renders the root React component"
+    },
+    "src/index.css": {
+      "type": "implementation",
+      "description": "Global CSS styles including Tailwind directives"
+    },
+    "src/components/": {
+      "type": "implementation",
+      "description": "UI components directory containing reusable React components"
+    },
+    "src/utils/": {
+      "type": "implementation",
+      "description": "Utility functions and helper methods"
+    },
+    "src/store/": {
+      "type": "implementation",
+      "description": "State management logic and stores"
+    },
+    "src/types/": {
+      "type": "interface",
+      "description": "TypeScript type definitions and interfaces"
+    },
+    "src/vite-env.d.ts": {
+      "type": "interface",
+      "description": "Vite environment type declarations"
+    }
+  }
+} 

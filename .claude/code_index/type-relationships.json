@@ -1,0 +1,45 @@
+{
+  "interfaces": {
+    "ThemeContextType": {
+      "defined_in": "src/types/theme.ts",
+      "properties": {
+        "darkMode": "boolean",
+        "toggleDarkMode": "() => void"
+      },
+      "implemented_by": ["ThemeProvider"],
+      "consumed_by": ["useTheme", "DarkModeToggle"]
+    },
+    "AppProps": {
+      "defined_in": "src/App.tsx",
+      "properties": {},
+      "implemented_by": ["App"],
+      "consumed_by": []
+    }
+  },
+  "types": {
+    "Theme": {
+      "defined_in": "src/types/theme.ts",
+      "type": "enum",
+      "values": ["'light'", "'dark'"],
+      "used_by": ["ThemeProvider", "useTheme"]
+    }
+  },
+  "components": {
+    "App": {
+      "defined_in": "src/App.tsx",
+      "props": "AppProps",
+      "returns": "JSX.Element",
+      "state": {
+        "darkMode": "boolean"
+      }
+    },
+    "ThemeProvider": {
+      "defined_in": "src/components/ThemeProvider.tsx",
+      "props": {
+        "children": "React.ReactNode"
+      },
+      "returns": "JSX.Element",
+      "provides_context": "ThemeContextType"
+    }
+  }
+} 

@@ -1,0 +1,46 @@
+{
+  "intents": {
+    "app_initialization": {
+      "files": ["src/main.tsx"],
+      "description": "Code responsible for initializing and bootstrapping the application"
+    },
+    "theme_management": {
+      "files": ["src/App.tsx", "src/utils/theme.ts"],
+      "description": "Code responsible for managing theme state and toggling between dark and light mode"
+    },
+    "ui_rendering": {
+      "files": ["src/App.tsx", "src/components/"],
+      "description": "Code responsible for rendering UI components and layout"
+    },
+    "state_management": {
+      "files": ["src/store/"],
+      "description": "Code responsible for managing application state"
+    },
+    "data_fetching": {
+      "files": ["src/utils/api.ts"],
+      "description": "Code responsible for fetching data from external APIs"
+    },
+    "routing": {
+      "files": ["src/App.tsx"],
+      "description": "Code responsible for handling routing and navigation"
+    },
+    "error_handling": {
+      "files": ["src/utils/error.ts", "src/components/ErrorBoundary.tsx"],
+      "description": "Code responsible for handling and displaying errors"
+    }
+  },
+  "sections": {
+    "src/App.tsx:10-20": {
+      "intent": "theme_management",
+      "description": "Dark mode state management and toggle functionality"
+    },
+    "src/App.tsx:22-26": {
+      "intent": "theme_management",
+      "description": "Effect to apply dark mode class to document"
+    },
+    "src/App.tsx:28-50": {
+      "intent": "ui_rendering",
+      "description": "Main application layout and component rendering"
+    }
+  }
+} 

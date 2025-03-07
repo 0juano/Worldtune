@@ -1,0 +1,43 @@
+{
+  "functions": {
+    "App": {
+      "defined_in": "src/App.tsx",
+      "calls": ["toggleDarkMode", "useEffect"],
+      "called_by": ["main.tsx:render"],
+      "description": "Main application component that renders the UI and manages theme"
+    },
+    "toggleDarkMode": {
+      "defined_in": "src/App.tsx",
+      "calls": ["setDarkMode", "localStorage.setItem"],
+      "called_by": ["App"],
+      "description": "Toggles between dark and light mode and persists the preference"
+    },
+    "main.tsx:render": {
+      "defined_in": "src/main.tsx",
+      "calls": ["App", "ReactDOM.createRoot"],
+      "called_by": [],
+      "description": "Entry point that renders the React application to the DOM"
+    }
+  },
+  "hooks": {
+    "useState": {
+      "usage": [
+        {
+          "component": "App",
+          "state_var": "darkMode",
+          "initial_value": "localStorage theme or true",
+          "setters": ["setDarkMode"]
+        }
+      ]
+    },
+    "useEffect": {
+      "usage": [
+        {
+          "component": "App",
+          "dependencies": ["darkMode"],
+          "effect": "Toggles dark class on document.documentElement"
+        }
+      ]
+    }
+  }
+} 
