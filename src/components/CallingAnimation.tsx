@@ -95,31 +95,42 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="mx-auto w-full max-w-[480px] space-y-8 rounded-3xl bg-white p-8 dark:bg-gray-800">
-        <div className="flex items-center justify-center">
-          <div className="relative">
-            <div className="absolute -inset-4 animate-ping rounded-full bg-wise-green/50" />
-            <div className="relative rounded-full bg-wise-green p-6">
-              <Phone className="h-8 w-8 text-wise-forest" />
+      <div className="mx-auto w-full max-w-[480px] space-y-8 rounded-3xl bg-white p-8 dark:bg-gray-800 flex flex-col justify-between" style={{ minHeight: '500px' }}>
+        <div className="flex-1 flex flex-col items-center justify-center space-y-8">
+          {/* Logo at the top */}
+          <div className="mb-4">
+            <img 
+              src="/logos/favicon.png" 
+              alt="WorldTune Logo" 
+              className="h-16 w-auto"
+            />
+          </div>
+          
+          <div className="flex items-center justify-center">
+            <div className="relative">
+              <div className="absolute -inset-4 animate-ping rounded-full bg-wise-green/50" />
+              <div className="relative rounded-full bg-wise-green p-6">
+                <Phone className="h-8 w-8 text-wise-forest" />
+              </div>
             </div>
           </div>
-        </div>
-        
-        <div className="text-center">
-          <p className="text-2xl font-semibold text-wise-forest dark:text-wise-green">
-            Calling...
-          </p>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">{phoneNumber}</p>
-        </div>
-
-        <div className="flex justify-center">
-          <button
-            onClick={handleEndCall}
-            className="flex items-center gap-2 rounded-full bg-red-500 px-6 py-3 text-white transition-colors hover:bg-red-600 active:scale-95"
-          >
-            <PhoneOff className="h-6 w-6" />
-            <span className="font-medium">End Call</span>
-          </button>
+          
+          <div className="text-center">
+            <p className="text-2xl font-semibold text-wise-forest dark:text-wise-green">
+              Calling...
+            </p>
+            <p className="mt-2 text-2xl font-medium text-wise-green">{phoneNumber}</p>
+          </div>
+          
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={handleEndCall}
+              className="flex items-center gap-2 rounded-full bg-red-500 px-6 py-3 text-white transition-colors hover:bg-red-600 active:scale-95"
+            >
+              <PhoneOff className="h-6 w-6" />
+              <span className="font-medium">End Call</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -279,16 +279,6 @@ export const Dial = () => {
   return (
     <>
       <div className="mx-auto flex max-w-md flex-col items-center px-4 py-8 sm:px-6 sm:py-12">
-        <div className="mb-4 flex w-full items-center justify-between">
-          <button
-            onClick={() => setShowAddCredits(true)}
-            className="flex items-center gap-2 rounded-full bg-wise-green/20 px-4 py-2 text-sm font-medium text-wise-forest transition-colors hover:bg-wise-green/30 dark:bg-wise-green/10 dark:text-wise-green dark:hover:bg-wise-green/20"
-          >
-            <Coins className="h-4 w-4" />
-            {credits} Credits
-          </button>
-        </div>
-
         <div className="mb-8 w-full">
           <div 
             ref={numberRef}
@@ -326,7 +316,7 @@ export const Dial = () => {
           <DialButton digit="#" />
         </div>
 
-        <div className="grid grid-cols-3 gap-4 sm:gap-6">
+        <div className="mb-8 grid grid-cols-3 gap-4 sm:gap-6">
           <ActionButton
             onClick={() => handleCall('ai')}
             icon={<Bot className="h-6 w-6" />}
@@ -346,6 +336,16 @@ export const Dial = () => {
             label="Delete"
             onLongPress={() => true}
           />
+        </div>
+
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => setShowAddCredits(true)}
+            className="flex items-center gap-2 rounded-full bg-wise-green/20 px-4 py-2 text-sm font-medium text-wise-forest transition-colors hover:bg-wise-green/30 dark:bg-wise-green/10 dark:text-wise-green dark:hover:bg-wise-green/20"
+          >
+            <Coins className="h-4 w-4" />
+            {credits} Credits
+          </button>
         </div>
       </div>
 

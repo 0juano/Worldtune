@@ -28,19 +28,35 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     <div className="flex min-h-screen flex-col bg-white text-wise-forest dark:bg-gray-900 dark:text-wise-green">
       {/* Mobile Header */}
       <header className="flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900 lg:hidden">
-        <button
-          className="rounded-lg p-2 hover:bg-wise-green/10 active:scale-95 dark:hover:bg-wise-green/20 focus-ring"
-          aria-label="Menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        <ThemeToggle />
+        <div className="flex items-center">
+          <img 
+            src="/logos/favicon.png" 
+            alt="WorldTune" 
+            className="h-8 w-auto" 
+          />
+        </div>
+        <div className="flex items-center">
+          <button
+            className="rounded-lg p-2 hover:bg-wise-green/10 active:scale-95 dark:hover:bg-wise-green/20 focus-ring mr-2"
+            aria-label="Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="flex flex-1">
         {/* Sidebar */}
         <nav className="hidden border-r border-gray-100 bg-white px-3 py-6 dark:border-gray-800 dark:bg-gray-900 lg:flex lg:w-20 lg:flex-col">
           <div className="flex flex-1 flex-col items-center gap-4">
+            <div className="mb-6">
+              <img 
+                src="/logos/favicon.png" 
+                alt="WorldTune" 
+                className="h-10 w-auto" 
+              />
+            </div>
             <NavButton
               icon={<MessageSquare className="h-5 w-5" />}
               label="Messages"
