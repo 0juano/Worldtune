@@ -52,7 +52,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="flex flex-1 flex-col items-center gap-4">
             <div className="mb-6">
               <img 
-                src="/logos/favicon.png" 
+                src="/logos/worldtune_icon.png" 
                 alt="WorldTune" 
                 className="h-10 w-auto" 
               />

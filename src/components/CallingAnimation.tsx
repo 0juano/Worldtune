@@ -100,9 +100,15 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
           {/* Logo at the top */}
           <div className="mb-4">
             <img 
-              src="/logos/favicon.png" 
+              src="/logos/Worldtune_Icon.png" 
               alt="WorldTune Logo" 
-              className="h-16 w-auto"
+              className="h-20 w-auto"
+              style={{ objectFit: 'contain' }}
+              onError={(e) => {
+                console.error("Image failed to load");
+                const target = e.target as HTMLImageElement;
+                target.src = "/logos/favicon.png"; // Fallback
+              }}
             />
           </div>
           
