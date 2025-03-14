@@ -265,7 +265,7 @@ export const Dial = () => {
         "relative h-16 w-16 rounded-full transition-all active:scale-95 sm:h-20 sm:w-20 focus-ring",
         number
           ? color
-          : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
+          : "bg-gray-200 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
       )}
       disabled={!number}
       aria-label={label}

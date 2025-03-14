@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Phone, PhoneOff } from 'lucide-react';
+import { useThemeStore } from '../store/useThemeStore';
 
 interface CallingAnimationProps {
   phoneNumber: string;
@@ -10,6 +11,8 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hangupAudioRef = useRef<HTMLAudioElement | null>(null);
   const isUnmounting = useRef(false);
+  const { theme } = useThemeStore();
+  const isLightMode = theme === 'light';
 
   useEffect(() => {
     // Ringtone audio
@@ -95,20 +98,15 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="mx-auto w-full max-w-[480px] space-y-8 rounded-3xl bg-white p-8 dark:bg-gray-800 flex flex-col justify-between" style={{ minHeight: '500px' }}>
+      <div className="mx-auto w-full max-w-[480px] space-y-8 rounded-3xl bg-gray-100 p-8 dark:bg-gray-800 flex flex-col justify-between" style={{ minHeight: '500px' }}>
         <div className="flex-1 flex flex-col items-center justify-center space-y-8">
           {/* Logo at the top */}
           <div className="mb-4">
             <img 
-              src="/logos/Worldtune_Icon.png" 
+              src={isLightMode ? "/logos/Worldtune_Icon_black.png" : "/logos/Worldtune_Icon.png"} 
               alt="WorldTune Logo" 
-              className="h-20 w-auto"
+              className="h-16 w-16" 
               style={{ objectFit: 'contain' }}
-              onError={(e) => {
-                console.error("Image failed to load");
-                const target = e.target as HTMLImageElement;
-                target.src = "/logos/favicon.png"; // Fallback
-              }}
             />
           </div>
           

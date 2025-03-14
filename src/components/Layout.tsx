@@ -2,10 +2,13 @@ import React from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { Menu, MessageSquare, Phone, Settings, Users } from 'lucide-react';
 import { useNavigationStore } from '../store/useNavigationStore';
+import { useThemeStore } from '../store/useThemeStore';
 import { cn } from '../utils/cn';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentView, setView } = useNavigationStore();
+  const { theme } = useThemeStore();
+  const isLightMode = theme === 'light';
 
   const NavButton: React.FC<{
     icon: React.ReactNode;
@@ -25,14 +28,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-wise-forest dark:bg-gray-900 dark:text-wise-green">
+    <div className="flex min-h-screen flex-col bg-gray-100 text-wise-forest dark:bg-gray-900 dark:text-wise-green">
       {/* Mobile Header */}
-      <header className="flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900 lg:hidden">
+      <header className="flex items-center justify-between border-b border-gray-200 bg-gray-100 px-4 py-3 dark:border-gray-800 dark:bg-gray-900 lg:hidden">
         <div className="flex items-center">
           <img 
-            src="/logos/favicon.png" 
+            src={isLightMode ? "/logos/Worldtune_Icon_black.png" : "/logos/Worldtune_Icon.png"} 
             alt="WorldTune" 
-            className="h-8 w-auto" 
+            className="h-8 w-8" 
+            style={{ objectFit: 'contain' }}
           />
         </div>
         <div className="flex items-center">
@@ -48,13 +52,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
       <div className="flex flex-1">
         {/* Sidebar */}
-        <nav className="hidden border-r border-gray-100 bg-white px-3 py-6 dark:border-gray-800 dark:bg-gray-900 lg:flex lg:w-20 lg:flex-col">
+        <nav className="hidden border-r border-gray-200 bg-gray-100 px-3 py-6 dark:border-gray-800 dark:bg-gray-900 lg:flex lg:w-20 lg:flex-col">
           <div className="flex flex-1 flex-col items-center gap-4">
             <div className="mb-6">
               <img 
-                src="/logos/worldtune_icon.png" 
+                src={isLightMode ? "/logos/Worldtune_Icon_black.png" : "/logos/Worldtune_Icon.png"} 
                 alt="WorldTune" 
-                className="h-10 w-auto" 
+                className="h-10 w-10" 
+                style={{ objectFit: 'contain' }}
               />
             </div>
             <NavButton
@@ -84,7 +89,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-900">
+        <main className="flex-1 overflow-hidden bg-gray-100 dark:bg-gray-900">
           {children}
         </main>
       </div>
