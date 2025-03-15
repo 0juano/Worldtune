@@ -1,25 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type CreditsStore = {
+interface CreditsStore {
   credits: number;
   addCredits: (amount: number) => void;
-  useCredits: (amount: number) => boolean;
-};
+  decrementCredits: () => void;
+}
 
 export const useCreditsStore = create<CreditsStore>()(
   persist(
-    (set, get) => ({
-      credits: 0,
+    (set) => ({
+      credits: 10, // Start with 10 credits
       addCredits: (amount) => set((state) => ({ credits: state.credits + amount })),
-      useCredits: (amount) => {
-        const currentCredits = get().credits;
-        if (currentCredits >= amount) {
-          set({ credits: currentCredits - amount });
-          return true;
-        }
-        return false;
-      },
+      decrementCredits: () => set((state) => ({ credits: Math.max(0, state.credits - 1) })),
     }),
     {
       name: 'credits-storage',

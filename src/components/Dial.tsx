@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Phone, Bot, MessageSquare, Coins, Delete } from 'lucide-react';
+import { Phone, Bot, MessageSquare, Coins, Delete, PhoneOff } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { AICallAssistant } from './AICallAssistant';
 import { AddCredits } from './AddCredits';
@@ -58,250 +58,290 @@ const createDTMFTone = (key: string) => {
   return buffer;
 };
 
-export const Dial = () => {
+export const Dial: React.FC = () => {
   const [number, setNumber] = useState('');
-  const [aiWaiting, setAiWaiting] = useState(false);
   const [showPromptInput, setShowPromptInput] = useState(false);
-  const [showAddCredits, setShowAddCredits] = useState(false);
-  const [isLongPressing, setIsLongPressing] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiWaiting, setAiWaiting] = useState(false);
   const [isCalling, setIsCalling] = useState(false);
-  const longPressTimer = useRef<NodeJS.Timeout>();
-  const deleteTimer = useRef<NodeJS.Timeout>();
-  const numberRef = useRef<HTMLInputElement>(null);
-  const dtmfTones = useRef<Record<string, AudioBuffer>>({});
-  const [aiPrompt, setAiPrompt] = useState(
-    "Please hold on line for me, speak English, tell them I am looking for my airpods"
-  );
-  const { credits } = useCreditsStore();
-  
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [callStartTime, setCallStartTime] = useState<Date | null>(null);
+  const [callDuration, setCallDuration] = useState('00:00');
+  const [showAddCredits, setShowAddCredits] = useState(false);
+  const { credits, decrementCredits } = useCreditsStore();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const justAddedPlusRef = useRef(false);
+
+  // Call timer effect
   useEffect(() => {
-    // Initialize DTMF tones for all keys
-    Object.keys(DTMF_FREQUENCIES).forEach(key => {
-      const buffer = createDTMFTone(key);
-      if (buffer) {
-        dtmfTones.current[key] = buffer;
-      }
-    });
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    if (numberRef.current) {
-      observer.observe(numberRef.current);
+    let intervalId: NodeJS.Timeout;
+    
+    if (isCallActive && callStartTime) {
+      intervalId = setInterval(() => {
+        const now = new Date();
+        const diffMs = now.getTime() - callStartTime.getTime();
+        const diffSec = Math.floor(diffMs / 1000);
+        const minutes = Math.floor(diffSec / 60).toString().padStart(2, '0');
+        const seconds = (diffSec % 60).toString().padStart(2, '0');
+        setCallDuration(`${minutes}:${seconds}`);
+      }, 1000);
     }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isCallActive, callStartTime]);
 
-    // Handle keyboard input
+  // Keyboard support
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Backspace') {
-        handleDelete();
-        return;
-      }
-      
-      if (e.key === '+' && number === '') {
-        setNumber('+');
-        playDTMFTone('+');
+      // Only process if we're not in an input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
 
-      if (/^[0-9#*]$/.test(e.key)) {
-        handleNumberClick(e.key);
+      // Handle numeric keys, *, #
+      if (/^[0-9*#]$/.test(e.key)) {
+        handleDigitPress(e.key);
+      } 
+      // Handle + (Shift + =)
+      else if (e.key === '+') {
+        handleDigitPress('+');
+      }
+      // Handle backspace/delete
+      else if (e.key === 'Backspace' || e.key === 'Delete') {
+        handleDelete();
+      }
+      // Handle Enter key for making a call
+      else if (e.key === 'Enter' && number.length > 0 && !isCallActive) {
+        handleCall('audio');
+      }
+      // Handle Escape key for ending a call
+      else if (e.key === 'Escape' && isCallActive) {
+        handleEndCall();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      observer.disconnect();
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [number]);
+  }, [number, isCallActive]); // Re-add event listener when these dependencies change
 
   const playDTMFTone = (key: string) => {
-    const buffer = dtmfTones.current[key];
-    if (buffer) {
-      const source = audioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioContext.destination);
-      source.start();
-      source.stop(audioContext.currentTime + 0.1);
-    }
+    const buffer = createDTMFTone(key);
+    if (!buffer) return;
+
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start();
   };
 
-  const handleNumberClick = (digit: string) => {
+  const handleDigitPress = (digit: string) => {
+    // Skip if we just added a plus sign (to prevent 0 from being added after +)
+    if (justAddedPlusRef.current && digit === '0') {
+      justAddedPlusRef.current = false;
+      return;
+    }
+    
     playDTMFTone(digit);
-    setNumber(prev => {
-      // Only allow '+' at the beginning
-      if (digit === '+' && prev !== '') {
-        return prev;
-      }
-      
-      const newNumber = prev + digit;
-      // Add animation class to the container
-      const container = numberRef.current;
-      if (container) {
-        container.classList.remove('number-added');
-        // Force reflow
-        void container.offsetWidth;
-        container.classList.add('number-added');
-      }
-      return newNumber;
-    });
+    setNumber(prev => prev + digit);
   };
 
   const handleDelete = () => {
-    playDTMFTone('*'); // Use * tone for delete
-    setNumber(prev => {
-      const container = numberRef.current;
-      if (container) {
-        container.classList.remove('number-deleted');
-        // Force reflow
-        void container.offsetWidth;
-        container.classList.add('number-deleted');
-      }
-      return prev.slice(0, -1);
-    });
+    if (number.length > 0) {
+      setNumber(prev => prev.slice(0, -1));
+    }
   };
 
   const handleCall = (type: 'audio' | 'ai') => {
-    if (type === 'ai') {
-      setShowPromptInput(true);
+    if (number.length === 0) return;
+    
+    if (isCallActive) {
+      // End the call
+      handleEndCall();
       return;
     }
-    if (type === 'audio') {
+
+    if (type === 'ai') {
+      setShowPromptInput(true);
+    } else {
+      // Check if we have enough credits
+      if (credits <= 0) {
+        setShowAddCredits(true);
+        return;
+      }
+      
+      // Start the call
       setIsCalling(true);
+      
+      // Simulate call being answered after 3 seconds
+      setTimeout(() => {
+        setIsCalling(false);
+        setIsCallActive(true);
+        setCallStartTime(new Date());
+        decrementCredits();
+      }, 3000);
     }
-    console.log(`Initiating ${type} call to ${number}`);
   };
 
   const handleStartAICall = () => {
+    if (credits <= 0) {
+      setShowAddCredits(true);
+      setShowPromptInput(false);
+      return;
+    }
+
     setShowPromptInput(false);
     setAiWaiting(true);
-    console.log('AI Prompt:', aiPrompt);
+    decrementCredits();
   };
 
   const handleJoinCall = () => {
-    console.log('Joining call...');
     setAiWaiting(false);
+    setIsCallActive(true);
+    setCallStartTime(new Date());
   };
 
   const handleEndCall = () => {
-    console.log('Ending call...');
+    setIsCallActive(false);
+    setCallStartTime(null);
+    setCallDuration('00:00');
+    setIsCalling(false);
     setAiWaiting(false);
+    setNumber(''); // Reset the number when hanging up
   };
 
-  const handleLongPressStart = (type: 'zero' | 'delete') => {
-    if (type === 'zero' && number === '') {
-      longPressTimer.current = setTimeout(() => {
-        setIsLongPressing(true);
-        setNumber('+');
+  const DialButton: React.FC<{ digit: string; letters?: string }> = ({ digit, letters }) => {
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isLongPressRef = useRef(false);
+
+    const handleMouseDown = () => {
+      if (digit !== '0' || !letters || letters !== '+') return;
+      
+      isLongPressRef.current = false;
+      timeoutRef.current = setTimeout(() => {
+        isLongPressRef.current = true;
         playDTMFTone('+');
-      }, 500);
-    } else if (type === 'delete') {
-      deleteTimer.current = setTimeout(() => {
-        setNumber('');
-        playDTMFTone('*');
-      }, 500);
-    }
-  };
+        setNumber(prev => prev + '+');
+        justAddedPlusRef.current = true;
+        
+        // Reset the flag after a delay
+        setTimeout(() => {
+          justAddedPlusRef.current = false;
+        }, 500);
+      }, 800); // 800ms for long press
+    };
 
-  const handleLongPressEnd = (type: 'zero' | 'delete') => {
-    if (type === 'zero') {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
+    const handleMouseUp = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
-      setIsLongPressing(false);
-    } else {
-      if (deleteTimer.current) {
-        clearTimeout(deleteTimer.current);
+      
+      if (!isLongPressRef.current && digit === '0') {
+        handleDigitPress(digit);
       }
-    }
-  };
+    };
 
-  const DialButton: React.FC<{ digit: string; letters?: string }> = ({ digit, letters }) => (
-    <button
-      onClick={() => !isLongPressing && handleNumberClick(digit)}
-      onMouseDown={digit === '0' ? () => handleLongPressStart('zero') : undefined}
-      onMouseUp={digit === '0' ? () => handleLongPressEnd('zero') : undefined}
-      onMouseLeave={digit === '0' ? () => handleLongPressEnd('zero') : undefined}
-      onTouchStart={digit === '0' ? () => handleLongPressStart('zero') : undefined}
-      onTouchEnd={digit === '0' ? () => handleLongPressEnd('zero') : undefined}
-      className="relative h-16 w-16 rounded-full bg-white text-center transition-all hover:bg-wise-green/10 active:scale-95 dark:bg-gray-800/50 dark:hover:bg-wise-green/20 sm:h-20 sm:w-20 focus-ring"
-    >
-      <div className="flex flex-col items-center justify-center">
-        <span className="text-2xl font-medium text-wise-forest dark:text-wise-green">
-          {isLongPressing && digit === '0' ? '+' : digit}
-        </span>
-        {letters && (
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            {letters}
-          </span>
-        )}
-      </div>
-    </button>
-  );
+    return (
+      <button
+        ref={buttonRef}
+        onMouseDown={digit === '0' && letters === '+' ? handleMouseDown : undefined}
+        onMouseUp={digit === '0' && letters === '+' ? handleMouseUp : undefined}
+        onTouchStart={digit === '0' && letters === '+' ? handleMouseDown : undefined}
+        onTouchEnd={digit === '0' && letters === '+' ? handleMouseUp : undefined}
+        onClick={digit === '0' && letters === '+' ? undefined : () => handleDigitPress(digit)}
+        className="flex h-16 w-16 flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm transition-all hover:bg-gray-50 active:scale-95 dark:bg-gray-800 dark:text-wise-green dark:hover:bg-gray-700 focus-ring"
+      >
+        <span className="text-2xl font-medium">{digit}</span>
+        {letters && <span className="text-xs text-gray-500 dark:text-gray-400">{letters}</span>}
+      </button>
+    );
+  };
 
   const ActionButton: React.FC<{
     onClick: () => void;
     icon: React.ReactNode;
     color: string;
     label: string;
-    onLongPress?: () => void;
-  }> = ({ onClick, icon, color, label, onLongPress }) => (
-    <button
-      onClick={onClick}
-      onMouseDown={onLongPress ? () => handleLongPressStart('delete') : undefined}
-      onMouseUp={onLongPress ? () => handleLongPressEnd('delete') : undefined}
-      onMouseLeave={onLongPress ? () => handleLongPressEnd('delete') : undefined}
-      onTouchStart={onLongPress ? () => handleLongPressStart('delete') : undefined}
-      onTouchEnd={onLongPress ? () => handleLongPressEnd('delete') : undefined}
-      className={cn(
-        "relative h-16 w-16 rounded-full transition-all active:scale-95 sm:h-20 sm:w-20 focus-ring",
-        number
-          ? color
-          : "bg-gray-200 text-gray-400 dark:bg-gray-800 dark:text-gray-500"
-      )}
-      disabled={!number}
-      aria-label={label}
-    >
-      <div className="flex items-center justify-center">
+    onLongPress?: () => boolean;
+  }> = ({ onClick, icon, color, label, onLongPress }) => {
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isLongPressRef = useRef(false);
+
+    const handleMouseDown = () => {
+      if (!onLongPress) return;
+      
+      isLongPressRef.current = false;
+      timeoutRef.current = setTimeout(() => {
+        isLongPressRef.current = true;
+        setNumber('');
+      }, 1000);
+    };
+
+    const handleMouseUp = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      
+      if (!isLongPressRef.current) {
+        onClick();
+      }
+    };
+
+    return (
+      <button
+        ref={buttonRef}
+        onClick={onLongPress ? undefined : onClick}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onTouchStart={handleMouseDown}
+        onTouchEnd={handleMouseUp}
+        className={cn(
+          "flex h-16 w-16 flex-col items-center justify-center rounded-full transition-all active:scale-95 focus-ring",
+          color
+        )}
+        aria-label={label}
+      >
         {icon}
-      </div>
-    </button>
-  );
+      </button>
+    );
+  };
 
   return (
     <>
-      <div className="mx-auto flex max-w-md flex-col items-center px-4 py-8 sm:px-6 sm:py-12">
-        <div className="mb-8 w-full">
-          <div 
-            ref={numberRef}
-            className="animated-number-container w-full text-center"
-          >
-            {number.split('').map((digit, index) => (
-              <span 
-                key={index} 
-                className="animated-number inline-block text-3xl font-medium text-wise-forest dark:text-wise-green sm:text-4xl"
-                style={{ animationDelay: `${index * 0.05}s` }}
-              >
-                {digit}
+      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-4 py-8 sm:px-6 sm:py-12">
+        {/* Fixed height container for timer and number display */}
+        <div className="h-24 flex flex-col justify-end w-full mb-8">
+          {/* Call timer display when call is active */}
+          {isCallActive && (
+            <div className="mb-4 flex items-center justify-center rounded-full bg-wise-green/20 px-4 py-2 w-fit mx-auto">
+              <span className="text-lg font-medium text-wise-forest dark:text-wise-green">
+                {callDuration}
               </span>
-            ))}
-            {!number && (
-              <span className="text-3xl font-medium text-gray-400 dark:text-gray-600 sm:text-4xl">
+            </div>
+          )}
+          
+          {/* Number display */}
+          <div className="w-full text-center">
+            {number ? (
+              <div className="text-3xl font-medium text-wise-forest dark:text-wise-green sm:text-4xl">
+                {number}
+              </div>
+            ) : (
+              <div className="text-3xl font-medium text-gray-400 dark:text-gray-600 sm:text-4xl">
                 Enter a number
-              </span>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-3 gap-4 sm:gap-6">
+        <div className="mb-4 grid grid-cols-3 gap-4 sm:gap-6">
           <DialButton digit="1" />
           <DialButton digit="2" letters="ABC" />
           <DialButton digit="3" letters="DEF" />
@@ -323,12 +363,21 @@ export const Dial = () => {
             color="bg-wise-blue text-wise-forest hover:bg-wise-blue/90 dark:bg-wise-blue/80 dark:text-wise-forest dark:hover:bg-wise-blue/70"
             label="AI Assistant call"
           />
-          <ActionButton
-            onClick={() => handleCall('audio')}
-            icon={<Phone className="h-6 w-6" />}
-            color="bg-wise-green text-wise-forest hover:bg-wise-green/90 dark:bg-wise-green/80 dark:text-wise-forest dark:hover:bg-wise-green/70"
-            label="Audio call"
-          />
+          {isCallActive ? (
+            <ActionButton
+              onClick={handleEndCall}
+              icon={<PhoneOff className="h-6 w-6" />}
+              color="bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:text-white dark:hover:bg-red-700"
+              label="End call"
+            />
+          ) : (
+            <ActionButton
+              onClick={() => handleCall('audio')}
+              icon={<Phone className="h-6 w-6" />}
+              color="bg-wise-green text-wise-forest hover:bg-wise-green/90 dark:bg-wise-green/80 dark:text-wise-forest dark:hover:bg-wise-green/70"
+              label="Audio call"
+            />
+          )}
           <ActionButton
             onClick={handleDelete}
             icon={<Delete className="h-6 w-6" />}
@@ -338,6 +387,7 @@ export const Dial = () => {
           />
         </div>
 
+        {/* Credits pill centered below all buttons */}
         <div className="flex justify-center mt-4">
           <button
             onClick={() => setShowAddCredits(true)}
