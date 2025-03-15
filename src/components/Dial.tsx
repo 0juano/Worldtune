@@ -70,7 +70,6 @@ export const Dial: React.FC = () => {
   const [showAddCredits, setShowAddCredits] = useState(false);
   const { credits, decrementCredits } = useCreditsStore();
   const containerRef = useRef<HTMLDivElement>(null);
-  const justAddedPlusRef = useRef(false);
 
   // Call timer effect
   useEffect(() => {
@@ -139,12 +138,6 @@ export const Dial: React.FC = () => {
   };
 
   const handleDigitPress = (digit: string) => {
-    // Skip if we just added a plus sign (to prevent 0 from being added after +)
-    if (justAddedPlusRef.current && digit === '0') {
-      justAddedPlusRef.current = false;
-      return;
-    }
-    
     playDTMFTone(digit);
     setNumber(prev => prev + digit);
   };
@@ -175,15 +168,25 @@ export const Dial: React.FC = () => {
       
       // Start the call
       setIsCalling(true);
-      
-      // Simulate call being answered after 3 seconds
-      setTimeout(() => {
-        setIsCalling(false);
-        setIsCallActive(true);
-        setCallStartTime(new Date());
-        decrementCredits();
-      }, 3000);
     }
+  };
+
+  const handleStartAICall = () => {
+    // Check if we have enough credits
+    if (credits <= 0) {
+      setShowAddCredits(true);
+      setShowPromptInput(false);
+      return;
+    }
+    
+    setShowPromptInput(false);
+    setAiWaiting(true);
+  };
+
+  const handleJoinCall = () => {
+    decrementCredits();
+    setIsCallActive(true);
+    setCallStartTime(new Date());
   };
 
   const handleEndCall = () => {
@@ -195,68 +198,49 @@ export const Dial: React.FC = () => {
     setNumber(''); // Reset the number when hanging up
   };
 
-  const handleStartAICall = () => {
-    if (aiPrompt.trim() === '') {
-      alert('Please enter instructions for the AI assistant.');
-      return;
-    }
-
-    // Check if we have enough credits
-    if (credits <= 0) {
-      setShowPromptInput(false);
-      setShowAddCredits(true);
-      return;
-    }
-
-    setShowPromptInput(false);
-    setAiWaiting(true);
-    decrementCredits();
-  };
-
-  const handleJoinCall = () => {
-    setAiWaiting(false);
-    setIsCallActive(true);
-    setCallStartTime(new Date());
-  };
-
   // Dial button component
   const DialButton: React.FC<{ digit: string; letters?: string }> = ({ digit, letters }) => {
-    const buttonRef = useRef<HTMLButtonElement>(null);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const isLongPressRef = useRef(false);
-
-    const handleMouseDown = () => {
-      if (digit !== '0' || !letters || letters !== '+') return;
-      
-      isLongPressRef.current = false;
-      timeoutRef.current = setTimeout(() => {
-        isLongPressRef.current = true;
-        playDTMFTone('+');
-        setNumber(prev => prev + '+');
-        justAddedPlusRef.current = true;
-        
-        // Reset the flag after a delay
-        setTimeout(() => {
-          justAddedPlusRef.current = false;
-        }, 500);
-      }, 800); // 800ms for long press
-    };
-
-    // Prevent default to stop text selection on long press
+    const [isLongPress, setIsLongPress] = useState(false);
+    const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+    
     const handleTouchStart = (e: React.TouchEvent) => {
-      e.preventDefault();
-      handleMouseDown();
+      e.preventDefault(); // Prevent default to stop text selection
+      
+      if (digit === '0' && letters === '+') {
+        longPressTimer.current = setTimeout(() => {
+          setIsLongPress(true);
+          playDTMFTone('+');
+          setNumber(prev => prev + '+');
+        }, 800);
+      }
+    };
+    
+    const handleTouchEnd = () => {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      
+      if (!isLongPress && digit === '0') {
+        handleDigitPress('0');
+      }
+      
+      setIsLongPress(false);
+    };
+    
+    const handleClick = () => {
+      // Only handle click for non-zero buttons or if not on mobile
+      if (digit !== '0' || !('ontouchstart' in window)) {
+        handleDigitPress(digit);
+      }
     };
 
     return (
       <button
-        ref={buttonRef}
-        onMouseDown={digit === '0' && letters === '+' ? handleMouseDown : undefined}
-        onMouseUp={digit === '0' && letters === '+' ? handleMouseDown : undefined}
+        className="flex h-20 w-20 select-none flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm transition-all hover:bg-gray-50 active:scale-95 dark:bg-gray-800 dark:text-wise-green dark:hover:bg-gray-700 focus-ring touch-manipulation"
+        onClick={handleClick}
         onTouchStart={digit === '0' && letters === '+' ? handleTouchStart : undefined}
-        onTouchEnd={digit === '0' && letters === '+' ? handleMouseDown : undefined}
-        onClick={digit === '0' && letters === '+' ? undefined : () => handleDigitPress(digit)}
-        className="flex h-20 w-20 flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm transition-all hover:bg-gray-50 active:scale-95 dark:bg-gray-800 dark:text-wise-green dark:hover:bg-gray-700 focus-ring select-none touch-manipulation"
+        onTouchEnd={digit === '0' && letters === '+' ? handleTouchEnd : undefined}
       >
         <span className="text-2xl font-medium">{digit}</span>
         {letters && <span className="text-xs text-gray-500 dark:text-gray-400">{letters}</span>}
