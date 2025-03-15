@@ -186,10 +186,25 @@ export const Dial: React.FC = () => {
     }
   };
 
+  const handleEndCall = () => {
+    setIsCallActive(false);
+    setCallStartTime(null);
+    setCallDuration('00:00');
+    setIsCalling(false);
+    setAiWaiting(false);
+    setNumber(''); // Reset the number when hanging up
+  };
+
   const handleStartAICall = () => {
+    if (aiPrompt.trim() === '') {
+      alert('Please enter instructions for the AI assistant.');
+      return;
+    }
+
+    // Check if we have enough credits
     if (credits <= 0) {
-      setShowAddCredits(true);
       setShowPromptInput(false);
+      setShowAddCredits(true);
       return;
     }
 
@@ -204,15 +219,7 @@ export const Dial: React.FC = () => {
     setCallStartTime(new Date());
   };
 
-  const handleEndCall = () => {
-    setIsCallActive(false);
-    setCallStartTime(null);
-    setCallDuration('00:00');
-    setIsCalling(false);
-    setAiWaiting(false);
-    setNumber(''); // Reset the number when hanging up
-  };
-
+  // Dial button component
   const DialButton: React.FC<{ digit: string; letters?: string }> = ({ digit, letters }) => {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -235,26 +242,21 @@ export const Dial: React.FC = () => {
       }, 800); // 800ms for long press
     };
 
-    const handleMouseUp = () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      
-      if (!isLongPressRef.current && digit === '0') {
-        handleDigitPress(digit);
-      }
+    // Prevent default to stop text selection on long press
+    const handleTouchStart = (e: React.TouchEvent) => {
+      e.preventDefault();
+      handleMouseDown();
     };
 
     return (
       <button
         ref={buttonRef}
         onMouseDown={digit === '0' && letters === '+' ? handleMouseDown : undefined}
-        onMouseUp={digit === '0' && letters === '+' ? handleMouseUp : undefined}
-        onTouchStart={digit === '0' && letters === '+' ? handleMouseDown : undefined}
-        onTouchEnd={digit === '0' && letters === '+' ? handleMouseUp : undefined}
+        onMouseUp={digit === '0' && letters === '+' ? handleMouseDown : undefined}
+        onTouchStart={digit === '0' && letters === '+' ? handleTouchStart : undefined}
+        onTouchEnd={digit === '0' && letters === '+' ? handleMouseDown : undefined}
         onClick={digit === '0' && letters === '+' ? undefined : () => handleDigitPress(digit)}
-        className="flex h-16 w-16 flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm transition-all hover:bg-gray-50 active:scale-95 dark:bg-gray-800 dark:text-wise-green dark:hover:bg-gray-700 focus-ring"
+        className="flex h-20 w-20 flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm transition-all hover:bg-gray-50 active:scale-95 dark:bg-gray-800 dark:text-wise-green dark:hover:bg-gray-700 focus-ring select-none touch-manipulation"
       >
         <span className="text-2xl font-medium">{digit}</span>
         {letters && <span className="text-xs text-gray-500 dark:text-gray-400">{letters}</span>}
@@ -262,6 +264,7 @@ export const Dial: React.FC = () => {
     );
   };
 
+  // Action button component
   const ActionButton: React.FC<{
     onClick: () => void;
     icon: React.ReactNode;
@@ -303,7 +306,7 @@ export const Dial: React.FC = () => {
         onTouchStart={handleMouseDown}
         onTouchEnd={handleMouseUp}
         className={cn(
-          "flex h-16 w-16 flex-col items-center justify-center rounded-full transition-all active:scale-95 focus-ring",
+          "flex h-20 w-20 flex-col items-center justify-center rounded-full transition-all active:scale-95 focus-ring select-none touch-manipulation",
           color
         )}
         aria-label={label}
@@ -381,7 +384,7 @@ export const Dial: React.FC = () => {
           <ActionButton
             onClick={handleDelete}
             icon={<Delete className="h-6 w-6" />}
-            color="bg-wise-pink/20 text-wise-forest hover:bg-wise-pink/30 dark:bg-wise-pink/10 dark:text-wise-pink dark:hover:bg-wise-pink/20"
+            color="bg-red-200 text-red-700 hover:bg-red-300 dark:bg-wise-pink/10 dark:text-wise-pink dark:hover:bg-wise-pink/20"
             label="Delete"
             onLongPress={() => true}
           />
@@ -391,7 +394,7 @@ export const Dial: React.FC = () => {
         <div className="flex justify-center mt-4">
           <button
             onClick={() => setShowAddCredits(true)}
-            className="flex items-center gap-2 rounded-full bg-wise-green/20 px-4 py-2 text-sm font-medium text-wise-forest transition-colors hover:bg-wise-green/30 dark:bg-wise-green/10 dark:text-wise-green dark:hover:bg-wise-green/20"
+            className="flex items-center gap-2 rounded-full bg-wise-green/20 px-4 py-2 text-sm font-medium text-wise-forest transition-colors hover:bg-wise-green/30 dark:bg-wise-green/10 dark:text-wise-green dark:hover:bg-wise-green/20 select-none"
           >
             <Coins className="h-4 w-4" />
             {credits} Credits
