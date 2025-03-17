@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ThemeToggle } from './ThemeToggle';
-import { Menu, MessageSquare, Phone, Settings, Users, X } from 'lucide-react';
+import { Menu, MessageSquare, Phone, Settings, Users, X, User } from 'lucide-react';
 import { useNavigationStore } from '../store/useNavigationStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { UserProfile } from './UserProfile';
@@ -155,8 +155,23 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 
                 {currentUser && (
                   <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center gap-3">
-                      <UserProfile />
+                    <div className="flex items-center space-x-3">
+                      <div className="relative h-10 w-10 overflow-hidden rounded-full bg-wise-green/20 dark:bg-wise-green/10">
+                        {currentUser.photoURL ? (
+                          <img 
+                            src={currentUser.photoURL} 
+                            alt={currentUser.displayName || 'User'} 
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <User className="h-6 w-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-wise-forest dark:text-wise-green" />
+                        )}
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="text-sm font-medium truncate text-wise-forest dark:text-wise-green">
+                          {currentUser.email}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
