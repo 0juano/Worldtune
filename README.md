@@ -46,6 +46,25 @@ Worldtune is a modern communication platform inspired by Skype, built with React
 
 4. Open your browser and navigate to `http://localhost:5173`
 
+### Environment Setup
+
+1. Create a `.env` file in the root directory based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Obtain Firebase configuration from your Firebase Console:
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Select your project
+   - Click on the gear icon (⚙️) and select "Project settings"
+   - Under "Your apps", find your web app and click "Config"
+   - Copy the configuration values to your `.env` file
+
+3. Security best practices:
+   - Never commit your `.env` file to version control
+   - Rotate API keys if they've been exposed
+   - Consider implementing Firebase App Check for additional security
+
 ## 🛠️ Tech Stack
 
 - **Frontend Framework**: React 18 with TypeScript
