@@ -85,6 +85,8 @@ export const Dial: React.FC = () => {
   // Call timer effect
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
+    let lastMinutes = '00';
+    let lastSeconds = '00';
     
     if (isCallActive && callStartTime) {
       intervalId = setInterval(() => {
@@ -93,7 +95,14 @@ export const Dial: React.FC = () => {
         const diffSec = Math.floor(diffMs / 1000);
         const minutes = Math.floor(diffSec / 60).toString().padStart(2, '0');
         const seconds = (diffSec % 60).toString().padStart(2, '0');
-        setCallDuration(`${minutes}:${seconds}`);
+        
+        // Only update the state if the time has actually changed
+        // This prevents unnecessary re-renders
+        if (minutes !== lastMinutes || seconds !== lastSeconds) {
+          lastMinutes = minutes;
+          lastSeconds = seconds;
+          setCallDuration(`${minutes}:${seconds}`);
+        }
       }, 1000);
     }
     
@@ -405,7 +414,8 @@ export const Dial: React.FC = () => {
 
     return (
       <button
-        className="flex h-20 w-20 select-none flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm transition-all hover:bg-gray-50 active:scale-95 dark:bg-gray-800 dark:text-wise-green dark:hover:bg-gray-700 focus-ring touch-manipulation"
+        className="flex h-20 w-20 select-none flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm dark:bg-gray-800 dark:text-wise-green focus-ring touch-manipulation"
+        style={{ transform: 'scale(1)' }}
         onClick={handleClick}
         onTouchStart={digit === '0' && letters === '+' ? handleTouchStart : undefined}
         onTouchEnd={digit === '0' && letters === '+' ? handleTouchEnd : undefined}
@@ -449,6 +459,9 @@ export const Dial: React.FC = () => {
       }
     };
 
+    // Extract base color classes without hover effects
+    const baseClasses = color.split(' ').filter(cls => !cls.startsWith('hover:') && !cls.startsWith('dark:hover:')).join(' ');
+
     return (
       <button
         ref={buttonRef}
@@ -458,9 +471,14 @@ export const Dial: React.FC = () => {
         onTouchStart={handleMouseDown}
         onTouchEnd={handleMouseUp}
         className={cn(
-          "flex h-20 w-20 flex-col items-center justify-center rounded-full transition-all active:scale-95 focus-ring select-none touch-manipulation",
-          color
+          "flex h-20 w-20 flex-col items-center justify-center rounded-full focus-ring select-none touch-manipulation",
+          baseClasses
         )}
+        style={{ 
+          transform: 'scale(1)',
+          transformOrigin: 'center',
+          willChange: 'transform'
+        }}
         aria-label={label}
       >
         {icon}
@@ -512,45 +530,34 @@ export const Dial: React.FC = () => {
         </div>
 
         <div className="mb-8 grid grid-cols-3 gap-4 sm:gap-6">
-          {isCallActive ? (
-            // Show mute/unmute button only during active calls
-            <ActionButton
-              onClick={toggleMute}
-              icon={isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-              color={isMuted 
-                ? "bg-blue-700 text-white hover:bg-blue-800 dark:bg-wise-blue/60 dark:text-white dark:hover:bg-wise-blue/50"
-                : "bg-wise-blue text-wise-forest hover:bg-wise-blue/90 dark:bg-wise-blue/80 dark:text-wise-forest dark:hover:bg-wise-blue/70"
-              }
-              label={isMuted ? "Unmute microphone" : "Mute microphone"}
-            />
-          ) : (
-            // Show AI button when no call is active
-            <ActionButton
-              onClick={() => handleCall('ai')}
-              icon={<MessageSquare className="h-6 w-6" />}
-              color="bg-purple-500 text-white hover:bg-purple-600 dark:bg-purple-600 dark:text-white dark:hover:bg-purple-700"
-              label="AI call"
-            />
-          )}
+          <ActionButton
+            onClick={toggleMute}
+            icon={isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+            color={isMuted 
+              ? "bg-blue-700 text-white dark:bg-wise-blue/60 dark:text-white"
+              : "bg-wise-blue text-wise-forest dark:bg-wise-blue/80 dark:text-wise-forest"
+            }
+            label={isMuted ? "Unmute microphone" : "Mute microphone"}
+          />
           {isCallActive ? (
             <ActionButton
               onClick={handleEndCall}
               icon={<PhoneOff className="h-6 w-6" />}
-              color="bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:text-white dark:hover:bg-red-700"
+              color="bg-red-500 text-white dark:bg-red-600 dark:text-white"
               label="End call"
             />
           ) : (
             <ActionButton
               onClick={() => handleCall('audio')}
               icon={<Phone className="h-6 w-6" />}
-              color="bg-wise-green text-wise-forest hover:bg-wise-green/90 dark:bg-wise-green/80 dark:text-wise-forest dark:hover:bg-wise-green/70"
+              color="bg-wise-green text-wise-forest dark:bg-wise-green/80 dark:text-wise-forest"
               label="Audio call"
             />
           )}
           <ActionButton
             onClick={handleDelete}
             icon={<Delete className="h-6 w-6" />}
-            color="bg-red-200 text-red-700 hover:bg-red-300 dark:bg-wise-pink/10 dark:text-wise-pink dark:hover:bg-wise-pink/20"
+            color="bg-red-200 text-red-700 dark:bg-wise-pink/10 dark:text-wise-pink"
             label="Delete"
             onLongPress={() => true}
           />
