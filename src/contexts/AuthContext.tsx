@@ -11,15 +11,15 @@ import {
 import { initializeApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
 
-// Firebase configuration
+// Firebase configuration with fallbacks for production
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyA5T4pEYhjhmrM4ngz0H-nq81PaueMEBPk",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "worldtune-dea7d.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "worldtune-dea7d",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "worldtune-dea7d.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "410694303342",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:410694303342:web:6b597723761841fb2c307f",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-6NG6MPMXL4"
 };
 
 // Initialize Firebase
