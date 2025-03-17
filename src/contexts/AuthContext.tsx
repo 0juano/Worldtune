@@ -75,13 +75,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign in with Google
   const signInWithGoogle = async () => {
     try {
-      console.log("AuthContext: Attempting Google sign-in");
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      console.log("AuthContext: Google sign-in successful", result.user.displayName);
       return result;
     } catch (error) {
-      console.error('AuthContext: Error signing in with Google:', error);
+      console.error('Error signing in with Google:', error);
       throw error;
     }
   };
@@ -89,24 +87,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Sign out
   const signOut = async () => {
     try {
-      console.log("AuthContext: Signing out");
       await firebaseSignOut(auth);
-      console.log("AuthContext: Sign out successful");
     } catch (error) {
-      console.error('AuthContext: Error signing out:', error);
+      console.error('Error signing out:', error);
       throw error;
     }
   };
 
   // Listen for auth state changes
   useEffect(() => {
-    console.log("AuthContext: Setting up auth state listener");
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("AuthContext: User authenticated", user.displayName);
         setCurrentUser(formatUser(user));
       } else {
-        console.log("AuthContext: No user authenticated");
         setCurrentUser(null);
       }
       setLoading(false);
@@ -121,12 +114,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithGoogle,
     signOut
   };
-
-  console.log("AuthContext: Current state", { 
-    isAuthenticated: !!currentUser, 
-    loading, 
-    userName: currentUser?.displayName 
-  });
 
   return (
     <AuthContext.Provider value={value}>

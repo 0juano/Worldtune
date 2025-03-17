@@ -13,24 +13,20 @@ export const Login: React.FC = () => {
   // Redirect to dial if already authenticated
   useEffect(() => {
     if (currentUser) {
-      console.log("Login: User already authenticated, redirecting to dial view");
       setView('dial');
     }
   }, [currentUser, setView]);
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log("Starting Google sign-in process...");
       setIsLoading(true);
       setError(null);
       await signInWithGoogle();
-      console.log("Google sign-in successful, redirecting to dial view...");
       
-      // Force a small delay to ensure Firebase auth state has updated
+      // Small delay to ensure Firebase auth state has updated
       setTimeout(() => {
         setView('dial');
-        console.log("View should be set to dial now");
-      }, 500);
+      }, 100);
     } catch (err) {
       console.error('Login error:', err);
       setError('Failed to sign in with Google. Please try again.');

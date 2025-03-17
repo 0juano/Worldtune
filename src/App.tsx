@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Layout } from './components/Layout';
 import { useThemeStore } from './store/useThemeStore';
 import { useNavigationStore } from './store/useNavigationStore';
@@ -15,11 +15,6 @@ function App() {
   const { theme } = useThemeStore();
   const { currentView } = useNavigationStore();
 
-  // Debug logging for view changes
-  useEffect(() => {
-    console.log("App: Current view changed to", currentView);
-  }, [currentView]);
-
   // CLAUDE-ANCHOR: theme-effect-start [uuid:b2c3d4e5-f6a7-8901-bcde-f12345678901]
   // Purpose: Apply theme class to document based on current theme state
   React.useEffect(() => {
@@ -34,11 +29,8 @@ function App() {
   // CLAUDE-ANCHOR: view-renderer-start [uuid:c3d4e5f6-a7b8-9012-cdef-123456789012]
   // Purpose: Render the appropriate view based on navigation state
   const renderContent = () => {
-    console.log("App: Rendering content for view", currentView);
-    
     // Handle login separately (no protection needed)
     if (currentView === 'login') {
-      console.log("App: Rendering Login component");
       return <Login />;
     }
 
@@ -46,21 +38,18 @@ function App() {
     switch (currentView) {
       case 'calls':
       case 'dial':
-        console.log("App: Rendering Dial component with protection");
         return (
           <ProtectedRoute>
             <Dial />
           </ProtectedRoute>
         );
       case 'messages':
-        console.log("App: Rendering Home component with protection");
         return (
           <ProtectedRoute>
             <Home />
           </ProtectedRoute>
         );
       case 'contacts':
-        console.log("App: Rendering Contacts placeholder with protection");
         return (
           <ProtectedRoute>
             <div className="h-full flex items-center justify-center">
@@ -69,14 +58,12 @@ function App() {
           </ProtectedRoute>
         );
       case 'settings':
-        console.log("App: Rendering Settings component with protection");
         return (
           <ProtectedRoute>
             <Settings />
           </ProtectedRoute>
         );
       default:
-        console.log("App: Rendering default Home component with protection");
         return (
           <ProtectedRoute>
             <Home />
