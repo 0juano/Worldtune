@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type View = 'messages' | 'calls' | 'contacts' | 'settings' | 'dial' | 'login';
+type View = 'dial' | 'history' | 'settings' | 'login';
 
 type NavigationStore = {
   currentView: View;

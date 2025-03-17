@@ -71,7 +71,7 @@ export const Dial: React.FC = () => {
   const [callStartTime, setCallStartTime] = useState<Date | null>(null);
   const [callDuration, setCallDuration] = useState('00:00');
   const [showAddCredits, setShowAddCredits] = useState(false);
-  const { credits, decrementCredits } = useCreditsStore();
+  const { credits, decrementCredits, getUSDValue } = useCreditsStore();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Call timer effect
@@ -395,7 +395,7 @@ export const Dial: React.FC = () => {
             className="flex items-center gap-2 rounded-full bg-wise-green/20 px-4 py-2 text-sm font-medium text-wise-forest transition-colors hover:bg-wise-green/30 dark:bg-wise-green/10 dark:text-wise-green dark:hover:bg-wise-green/20 select-none"
           >
             <Coins className="h-4 w-4" />
-            {credits} Credits
+            USD {getUSDValue()}
           </button>
         </div>
       </div>

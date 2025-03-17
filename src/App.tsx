@@ -2,12 +2,12 @@ import React from 'react';
 import { Layout } from './components/Layout';
 import { useThemeStore } from './store/useThemeStore';
 import { useNavigationStore } from './store/useNavigationStore';
-import { Home } from './components/Home';
 import { Dial } from './components/Dial';
 import { Login } from './components/Login';
 import { Settings } from './components/Settings';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
+import { CallHistory } from './components/CallHistory';
 
 // CLAUDE-ANCHOR: app-component-start [uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890]
 // Purpose: Main application component that handles view rendering and theme application
@@ -36,25 +36,16 @@ function App() {
 
     // For all other views, wrap with ProtectedRoute
     switch (currentView) {
-      case 'calls':
       case 'dial':
         return (
           <ProtectedRoute>
             <Dial />
           </ProtectedRoute>
         );
-      case 'messages':
+      case 'history':
         return (
           <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        );
-      case 'contacts':
-        return (
-          <ProtectedRoute>
-            <div className="h-full flex items-center justify-center">
-              <p>Contacts view coming soon</p>
-            </div>
+            <CallHistory />
           </ProtectedRoute>
         );
       case 'settings':
@@ -66,7 +57,7 @@ function App() {
       default:
         return (
           <ProtectedRoute>
-            <Home />
+            <Dial />
           </ProtectedRoute>
         );
     }

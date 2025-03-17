@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ThemeToggle } from './ThemeToggle';
-import { Menu, MessageSquare, Phone, Settings, Users, X, User } from 'lucide-react';
+import { History, Menu, Phone, Settings, X, User } from 'lucide-react';
 import { useNavigationStore } from '../store/useNavigationStore';
 import { useThemeStore } from '../store/useThemeStore';
 import { UserProfile } from './UserProfile';
@@ -22,7 +22,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const NavButton: React.FC<{
     icon: React.ReactNode;
     label: string;
-    view: 'messages' | 'calls' | 'contacts' | 'settings';
+    view: 'dial' | 'history' | 'settings';
   }> = ({ icon, label, view }) => (
     <button
       onClick={() => {
@@ -97,44 +97,30 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => {
-                        setView('messages');
+                        setView('dial');
                         setIsMobileSidebarOpen(false);
                       }}
                       className={cn(
                         "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-wise-green/10 dark:hover:bg-wise-green/20",
-                        currentView === 'messages' && "bg-wise-green/20 text-wise-forest dark:bg-wise-green/10 dark:text-wise-green"
-                      )}
-                    >
-                      <MessageSquare className="h-5 w-5" />
-                      <span>Messages</span>
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        setView('calls');
-                        setIsMobileSidebarOpen(false);
-                      }}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-wise-green/10 dark:hover:bg-wise-green/20",
-                        currentView === 'calls' && "bg-wise-green/20 text-wise-forest dark:bg-wise-green/10 dark:text-wise-green"
+                        currentView === 'dial' && "bg-wise-green/20 text-wise-forest dark:bg-wise-green/10 dark:text-wise-green"
                       )}
                     >
                       <Phone className="h-5 w-5" />
-                      <span>Calls</span>
+                      <span>Dial Pad</span>
                     </button>
                     
                     <button
                       onClick={() => {
-                        setView('contacts');
+                        setView('history');
                         setIsMobileSidebarOpen(false);
                       }}
                       className={cn(
                         "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-wise-green/10 dark:hover:bg-wise-green/20",
-                        currentView === 'contacts' && "bg-wise-green/20 text-wise-forest dark:bg-wise-green/10 dark:text-wise-green"
+                        currentView === 'history' && "bg-wise-green/20 text-wise-forest dark:bg-wise-green/10 dark:text-wise-green"
                       )}
                     >
-                      <Users className="h-5 w-5" />
-                      <span>Contacts</span>
+                      <History className="h-5 w-5" />
+                      <span>Call History</span>
                     </button>
                     
                     <button
@@ -193,19 +179,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 />
               </div>
               <NavButton
-                icon={<MessageSquare className="h-5 w-5" />}
-                label="Messages"
-                view="messages"
-              />
-              <NavButton
                 icon={<Phone className="h-5 w-5" />}
-                label="Calls"
-                view="calls"
+                label="Dial Pad"
+                view="dial"
               />
               <NavButton
-                icon={<Users className="h-5 w-5" />}
-                label="Contacts"
-                view="contacts"
+                icon={<History className="h-5 w-5" />}
+                label="Call History"
+                view="history"
               />
             </div>
             <div className="flex flex-col items-center gap-4">
