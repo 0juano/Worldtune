@@ -7,7 +7,10 @@ import { useCreditsStore } from '../store/useCreditsStore';
 import { CallingAnimation } from './CallingAnimation';
 
 // Create a single AudioContext instance
-const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+// Using type assertion to handle the webkitAudioContext
+const AudioContextClass = window.AudioContext || 
+  ((window as unknown) as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+const audioContext = new AudioContextClass();
 
 // DTMF frequency pairs for each key
 const DTMF_FREQUENCIES: Record<string, [number, number]> = {
@@ -139,7 +142,18 @@ export const Dial: React.FC = () => {
 
   const handleDigitPress = (digit: string) => {
     playDTMFTone(digit);
-    setNumber(prev => prev + digit);
+    
+    setNumber(prev => {
+      // Check if adding this digit would create or continue a number starting with '00'
+      const newNumber = prev + digit;
+      
+      // If the number starts with '00', replace it with '+'
+      if (newNumber.startsWith('00')) {
+        return '+' + newNumber.substring(2);
+      }
+      
+      return newNumber;
+    });
   };
 
   const handleDelete = () => {
