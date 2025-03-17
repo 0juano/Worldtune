@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Phone, Bot, MessageSquare, Coins, Delete, PhoneOff } from 'lucide-react';
+import { Phone, Bot, MessageSquare, Coins, Delete, PhoneOff, Mic, MicOff } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { AICallAssistant } from './AICallAssistant';
 import { AddCredits } from './AddCredits';
 import { useCreditsStore } from '../store/useCreditsStore';
 import { CallingAnimation } from './CallingAnimation';
+import { useCallHistory } from '../contexts/CallHistoryContext';
+import { useNavigationStore } from '../store/useNavigationStore';
 
 // Create a single AudioContext instance
 // Using type assertion to handle the webkitAudioContext
@@ -71,8 +73,13 @@ export const Dial: React.FC = () => {
   const [callStartTime, setCallStartTime] = useState<Date | null>(null);
   const [callDuration, setCallDuration] = useState('00:00');
   const [showAddCredits, setShowAddCredits] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const { credits, decrementCredits, getUSDValue } = useCreditsStore();
+  const { addCall } = useCallHistory();
+  const { dialInitialNumber } = useNavigationStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const audioTrackRef = useRef<MediaStreamTrack | null>(null);
 
   // Call timer effect
   useEffect(() => {
@@ -93,6 +100,13 @@ export const Dial: React.FC = () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [isCallActive, callStartTime]);
+  
+  // Set initial number from navigation (when returning from call history)
+  useEffect(() => {
+    if (dialInitialNumber && !isCallActive) {
+      setNumber(dialInitialNumber);
+    }
+  }, [dialInitialNumber, isCallActive]);
 
   // Keyboard support
   useEffect(() => {
@@ -129,6 +143,41 @@ export const Dial: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [number, isCallActive]); // Re-add event listener when these dependencies change
+
+  // Set up microphone functionality when call is active
+  useEffect(() => {
+    // Only request microphone access when a call is active
+    if (isCallActive) {
+      const setupMicrophone = async () => {
+        try {
+          // Request microphone access
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          micStreamRef.current = stream;
+          
+          // Get the audio track
+          audioTrackRef.current = stream.getAudioTracks()[0];
+          
+          // Apply initial mute state
+          if (audioTrackRef.current) {
+            audioTrackRef.current.enabled = !isMuted;
+          }
+        } catch (error) {
+          console.error('Error accessing microphone:', error);
+        }
+      };
+      
+      setupMicrophone();
+    }
+    
+    // Clean up when call ends
+    return () => {
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach(track => track.stop());
+        micStreamRef.current = null;
+        audioTrackRef.current = null;
+      }
+    };
+  }, [isCallActive]);
 
   const playDTMFTone = (key: string) => {
     const buffer = createDTMFTone(key);
@@ -182,6 +231,9 @@ export const Dial: React.FC = () => {
       
       // Start the call
       setIsCalling(true);
+      
+      // Record the outgoing call in history immediately
+      addCall(number, 0, 'outgoing');
     }
   };
 
@@ -195,21 +247,81 @@ export const Dial: React.FC = () => {
     
     setShowPromptInput(false);
     setAiWaiting(true);
+    
+    // Record the AI call in history immediately
+    addCall('AI Assistant', 0, 'ai');
   };
 
   const handleJoinCall = () => {
     decrementCredits();
     setIsCallActive(true);
     setCallStartTime(new Date());
+    
+    // For AI calls, record immediately
+    if (aiWaiting) {
+      // Record AI call in history
+      addCall('AI Assistant', 0, 'ai');
+    }
   };
 
   const handleEndCall = () => {
+    // Calculate call duration in seconds
+    let durationInSeconds = 0;
+    if (callStartTime) {
+      const now = new Date();
+      durationInSeconds = Math.floor((now.getTime() - callStartTime.getTime()) / 1000);
+    }
+    
+    // Add the call to history only if it was active and lasted more than 0 seconds
+    // This avoids duplicate entries since we're now recording calls at the start too
+    if (isCallActive && durationInSeconds > 0) {
+      // Determine call type based on internal state
+      const callType = aiWaiting ? 'ai' : 'outgoing'; // We only support outgoing calls for now
+      
+      // Only record if there's a number or if it's an AI call
+      if (number || callType === 'ai') {
+        addCall(number || 'Unknown', durationInSeconds, callType);
+      }
+    }
+    
     setIsCallActive(false);
     setCallStartTime(null);
     setCallDuration('00:00');
     setIsCalling(false);
     setAiWaiting(false);
     setNumber(''); // Reset the number when hanging up
+    
+    // Clean up microphone when call ends
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(track => track.stop());
+      micStreamRef.current = null;
+      audioTrackRef.current = null;
+    }
+  };
+
+  // Toggle microphone mute/unmute
+  const toggleMute = () => {
+    // Get the next mute state (opposite of current)
+    const nextMuteState = !isMuted;
+    setIsMuted(nextMuteState);
+    
+    // Actually mute/unmute the microphone if we have access to it
+    if (audioTrackRef.current) {
+      // Enable the track when NOT muted
+      audioTrackRef.current.enabled = !nextMuteState;
+      console.log(`Microphone ${nextMuteState ? 'muted' : 'unmuted'}`);
+    } else if (isCallActive) {
+      // If the call is active but we don't have the audio track, try to get it again
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          micStreamRef.current = stream;
+          audioTrackRef.current = stream.getAudioTracks()[0];
+          if (audioTrackRef.current) {
+            audioTrackRef.current.enabled = !nextMuteState;
+          }
+        })
+        .catch(err => console.error('Error accessing microphone:', err));
+    }
   };
 
   // Dial button component
@@ -359,10 +471,13 @@ export const Dial: React.FC = () => {
 
         <div className="mb-8 grid grid-cols-3 gap-4 sm:gap-6">
           <ActionButton
-            onClick={() => handleCall('ai')}
-            icon={<Bot className="h-6 w-6" />}
-            color="bg-wise-blue text-wise-forest hover:bg-wise-blue/90 dark:bg-wise-blue/80 dark:text-wise-forest dark:hover:bg-wise-blue/70"
-            label="AI Assistant call"
+            onClick={toggleMute}
+            icon={isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+            color={isMuted 
+              ? "bg-blue-700 text-white hover:bg-blue-800 dark:bg-wise-blue/60 dark:text-white dark:hover:bg-wise-blue/50"
+              : "bg-wise-blue text-wise-forest hover:bg-wise-blue/90 dark:bg-wise-blue/80 dark:text-wise-forest dark:hover:bg-wise-blue/70"
+            }
+            label={isMuted ? "Unmute microphone" : "Mute microphone"}
           />
           {isCallActive ? (
             <ActionButton

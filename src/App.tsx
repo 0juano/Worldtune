@@ -8,6 +8,7 @@ import { Settings } from './components/Settings';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { CallHistory } from './components/CallHistory';
+import { CallHistoryProvider } from './contexts/CallHistoryContext';
 
 // CLAUDE-ANCHOR: app-component-start [uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890]
 // Purpose: Main application component that handles view rendering and theme application
@@ -68,9 +69,11 @@ function App() {
   // Purpose: Main render function that applies layout to the current view
   return (
     <AuthProvider>
-      <Layout>
-        {renderContent()}
-      </Layout>
+      <CallHistoryProvider>
+        <Layout>
+          {renderContent()}
+        </Layout>
+      </CallHistoryProvider>
     </AuthProvider>
   );
   // CLAUDE-ANCHOR: app-render-end
