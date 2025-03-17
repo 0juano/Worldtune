@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Phone, Bot, MessageSquare, Coins, Delete, PhoneOff, Mic, MicOff } from 'lucide-react';
+import { Phone, MessageSquare, Coins, Delete, PhoneOff, Mic, MicOff } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { AICallAssistant } from './AICallAssistant';
 import { AddCredits } from './AddCredits';
@@ -325,6 +325,21 @@ export const Dial: React.FC = () => {
     }
   };
 
+  const handleCallPickup = () => {
+    // First hide the calling animation to ensure it's gone
+    setIsCalling(false);
+    
+    // Immediately set the call to active to avoid timing issues
+    setIsCallActive(true);
+    setCallStartTime(new Date());
+    
+    // Decrement credits for the call
+    decrementCredits();
+    
+    // Record the call in history
+    addCall(number, 0, 'outgoing');
+  };
+
   // Toggle microphone mute/unmute
   const toggleMute = () => {
     // Get the next mute state (opposite of current)
@@ -335,7 +350,6 @@ export const Dial: React.FC = () => {
     if (audioTrackRef.current) {
       // Enable the track when NOT muted
       audioTrackRef.current.enabled = !nextMuteState;
-      console.log(`Microphone ${nextMuteState ? 'muted' : 'unmuted'}`);
     } else if (isCallActive) {
       // If the call is active but we don't have the audio track, try to get it again
       navigator.mediaDevices.getUserMedia({ audio: true })
@@ -346,7 +360,9 @@ export const Dial: React.FC = () => {
             audioTrackRef.current.enabled = !nextMuteState;
           }
         })
-        .catch(err => console.error('Error accessing microphone:', err));
+        .catch(() => {
+          // Handle error silently
+        });
     }
   };
 
@@ -496,15 +512,26 @@ export const Dial: React.FC = () => {
         </div>
 
         <div className="mb-8 grid grid-cols-3 gap-4 sm:gap-6">
-          <ActionButton
-            onClick={toggleMute}
-            icon={isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-            color={isMuted 
-              ? "bg-blue-700 text-white hover:bg-blue-800 dark:bg-wise-blue/60 dark:text-white dark:hover:bg-wise-blue/50"
-              : "bg-wise-blue text-wise-forest hover:bg-wise-blue/90 dark:bg-wise-blue/80 dark:text-wise-forest dark:hover:bg-wise-blue/70"
-            }
-            label={isMuted ? "Unmute microphone" : "Mute microphone"}
-          />
+          {isCallActive ? (
+            // Show mute/unmute button only during active calls
+            <ActionButton
+              onClick={toggleMute}
+              icon={isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+              color={isMuted 
+                ? "bg-blue-700 text-white hover:bg-blue-800 dark:bg-wise-blue/60 dark:text-white dark:hover:bg-wise-blue/50"
+                : "bg-wise-blue text-wise-forest hover:bg-wise-blue/90 dark:bg-wise-blue/80 dark:text-wise-forest dark:hover:bg-wise-blue/70"
+              }
+              label={isMuted ? "Unmute microphone" : "Mute microphone"}
+            />
+          ) : (
+            // Show AI button when no call is active
+            <ActionButton
+              onClick={() => handleCall('ai')}
+              icon={<MessageSquare className="h-6 w-6" />}
+              color="bg-purple-500 text-white hover:bg-purple-600 dark:bg-purple-600 dark:text-white dark:hover:bg-purple-700"
+              label="AI call"
+            />
+          )}
           {isCallActive ? (
             <ActionButton
               onClick={handleEndCall}
@@ -602,7 +629,12 @@ export const Dial: React.FC = () => {
       {isCalling && (
         <CallingAnimation
           phoneNumber={number}
-          onClose={() => setIsCalling(false)}
+          onClose={() => {
+            setIsCalling(false);
+          }}
+          onPickup={() => {
+            handleCallPickup();
+          }}
         />
       )}
     </>
