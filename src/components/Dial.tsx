@@ -80,6 +80,7 @@ export const Dial: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioTrackRef = useRef<MediaStreamTrack | null>(null);
+  const endCallSoundRef = useRef<HTMLAudioElement | null>(null);
 
   // Call timer effect
   useEffect(() => {
@@ -179,6 +180,21 @@ export const Dial: React.FC = () => {
     };
   }, [isCallActive]);
 
+  // Initialize the end call sound
+  useEffect(() => {
+    // Create audio element for the end call sound
+    endCallSoundRef.current = new Audio('/sounds/call-end.mp3');
+    
+    // Clean up when component unmounts
+    return () => {
+      if (endCallSoundRef.current) {
+        endCallSoundRef.current.pause();
+        endCallSoundRef.current.src = '';
+        endCallSoundRef.current = null;
+      }
+    };
+  }, []);
+
   const playDTMFTone = (key: string) => {
     const buffer = createDTMFTone(key);
     if (!buffer) return;
@@ -264,7 +280,17 @@ export const Dial: React.FC = () => {
     }
   };
 
-  const handleEndCall = () => {
+  const handleEndCall = async () => {
+    // Play the futuristic end call sound
+    if (endCallSoundRef.current) {
+      try {
+        endCallSoundRef.current.currentTime = 0;
+        await endCallSoundRef.current.play();
+      } catch (error) {
+        console.error('Error playing end call sound:', error);
+      }
+    }
+    
     // Calculate call duration in seconds
     let durationInSeconds = 0;
     if (callStartTime) {
@@ -506,8 +532,11 @@ export const Dial: React.FC = () => {
         {/* Credits pill centered below all buttons */}
         <div className="flex justify-center mt-4">
           <button
-            onClick={() => setShowAddCredits(true)}
-            className="flex items-center gap-2 rounded-full bg-wise-green/20 px-4 py-2 text-sm font-medium text-wise-forest transition-colors hover:bg-wise-green/30 dark:bg-wise-green/10 dark:text-wise-green dark:hover:bg-wise-green/20 select-none"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent event from bubbling up to parent elements
+              setShowAddCredits(true);
+            }}
+            className="flex items-center gap-2 rounded-full bg-wise-green/20 px-4 py-2 text-sm font-medium text-wise-forest transition-colors hover:bg-wise-green/30 dark:bg-wise-green/10 dark:text-wise-green dark:hover:bg-wise-green/20 select-none relative z-10"
           >
             <Coins className="h-4 w-4" />
             USD {getUSDValue()}
@@ -546,7 +575,21 @@ export const Dial: React.FC = () => {
         </div>
       )}
 
-      {showAddCredits && <AddCredits onClose={() => setShowAddCredits(false)} />}
+      {showAddCredits && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" 
+          onClick={(e) => {
+            // Only close if clicking the backdrop, not the modal itself
+            if (e.target === e.currentTarget) {
+              setShowAddCredits(false);
+            }
+          }}
+        >
+          <div onClick={(e) => e.stopPropagation()} className="relative">
+            <AddCredits onClose={() => setShowAddCredits(false)} />
+          </div>
+        </div>
+      )}
 
       {aiWaiting && (
         <AICallAssistant

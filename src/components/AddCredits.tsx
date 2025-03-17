@@ -47,6 +47,12 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     preloadSound('cash-register');
   }, []);
 
+  // Wrapper function to handle closing the modal
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onClose();
+  };
+
   const handleCardPayment = async () => {
     if (!selectedPackage) return;
     
@@ -126,7 +132,7 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Add Funds</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg p-2 hover:bg-gray-100 active:scale-95 dark:hover:bg-gray-700 focus-ring"
             aria-label="Close"
           >
@@ -145,7 +151,7 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Add Funds</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg p-2 hover:bg-gray-100 active:scale-95 dark:hover:bg-gray-700 focus-ring"
             aria-label="Close"
           >
@@ -209,7 +215,7 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Pay with Stablecoin</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg p-2 hover:bg-gray-100 active:scale-95 dark:hover:bg-gray-700 focus-ring"
             aria-label="Close"
           >
@@ -272,7 +278,7 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Pay with Card</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="rounded-lg p-2 hover:bg-gray-100 active:scale-95 dark:hover:bg-gray-700 focus-ring"
             aria-label="Close"
           >
@@ -313,7 +319,7 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold">Add Funds</h2>
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="rounded-lg p-2 hover:bg-gray-100 active:scale-95 dark:hover:bg-gray-700 focus-ring"
           aria-label="Close"
         >

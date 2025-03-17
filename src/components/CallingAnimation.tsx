@@ -17,8 +17,8 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
   useEffect(() => {
     // Ringtone audio
     audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3');
-    // Hang up sound
-    hangupAudioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2309/2309-preview.mp3');
+    // Futuristic hang up sound
+    hangupAudioRef.current = new Audio('/sounds/call-end.mp3');
     
     if (audioRef.current) {
       audioRef.current.loop = true;
