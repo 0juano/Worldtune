@@ -168,8 +168,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         {/* Desktop Sidebar - Only show if not on login page */}
         {!isLoginPage && (
-          <nav className="hidden border-r border-gray-200 bg-gray-100 px-3 py-6 dark:border-gray-800 dark:bg-gray-900 lg:flex lg:w-20 lg:flex-col">
-            <div className="flex flex-1 flex-col items-center gap-4">
+          <nav className="hidden border-r border-gray-200 bg-gray-100 px-3 py-6 dark:border-gray-800 dark:bg-gray-900 lg:flex lg:fixed lg:h-full lg:w-20 lg:flex-col lg:justify-between">
+            <div className="flex flex-col items-center gap-4">
               <div className="mb-6">
                 <img 
                   src={isLightMode ? "/logos/Worldtune_Icon_black.png" : "/logos/Worldtune_Icon.png"} 
@@ -201,10 +201,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           </nav>
         )}
 
-        {/* Main Content */}
+        {/* Main Content - Add left padding for sidebar space on desktop */}
         <main className={cn(
           "flex-1 overflow-hidden bg-gray-100 dark:bg-gray-900",
-          isLoginPage && "max-w-screen" // Full width on login page
+          isLoginPage && "max-w-screen", // Full width on login page
+          !isLoginPage && "lg:pl-20" // Add padding on desktop to account for fixed sidebar
         )}>
           {children}
         </main>
