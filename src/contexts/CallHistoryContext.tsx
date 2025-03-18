@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 
 // Call history item type
@@ -99,7 +99,7 @@ const loadFromLocalStorage = (userId: string): CallHistoryItem[] => {
     }
     
     // Convert string timestamps back to Date objects
-    return userCalls.map((call: any) => ({
+    return userCalls.map((call: CallHistoryItem) => ({
       ...call,
       timestamp: new Date(call.timestamp)
     }));
@@ -116,7 +116,7 @@ export const CallHistoryProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { currentUser } = useAuth();
 
   // Fetch call history for the current user
-  const fetchCallHistory = () => {
+  const fetchCallHistory = useCallback(() => {
     if (!currentUser) {
       setCallHistory([]);
       setLoading(false);
@@ -127,10 +127,10 @@ export const CallHistoryProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const calls = loadFromLocalStorage(currentUser.uid);
     setCallHistory(calls);
     setLoading(false);
-  };
+  }, [currentUser]);
 
   // Add a new call to history
-  const addCall = (
+  const addCall = useCallback((
     phoneNumber: string, 
     duration: number, 
     type: 'incoming' | 'outgoing' | 'missed' | 'ai'
@@ -151,12 +151,12 @@ export const CallHistoryProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const updatedCalls = [newCall, ...callHistory];
     setCallHistory(updatedCalls);
     saveToLocalStorage(currentUser.uid, updatedCalls);
-  };
+  }, [currentUser, callHistory]);
 
   // Fetch call history when user changes
   useEffect(() => {
     fetchCallHistory();
-  }, [currentUser]);
+  }, [fetchCallHistory]);
 
   const value = {
     callHistory,

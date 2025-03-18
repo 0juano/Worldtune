@@ -8,7 +8,12 @@ import { CallingAnimation } from './CallingAnimation';
 import { useCallHistory } from '../contexts/CallHistoryContext';
 import { useNavigationStore } from '../store/useNavigationStore';
 import { useDialStore } from '../store/useDialStore';
-import { formatInternationalPhoneNumber, validatePhoneNumber, detectCountryFromNumber } from '../utils/phoneFormat';
+import { 
+  formatInternationalPhoneNumber, 
+  validatePhoneNumber, 
+  detectCountryFromNumber,
+  getCountryFlag 
+} from '../utils/phoneFormat';
 
 // Create a single AudioContext instance
 // Using type assertion to handle the webkitAudioContext
@@ -759,10 +764,11 @@ export const Dial: React.FC = () => {
             </div>
           )}
 
-          {/* Country indicator (small and subtle) */}
+          {/* Country indicator with flag (small and subtle) */}
           {detectedCountry && (
-            <div className="text-xs text-center text-gray-500 dark:text-gray-400 mb-1">
-              {detectedCountry}
+            <div className="text-xs text-center text-gray-500 dark:text-gray-400 mb-1 flex items-center justify-center gap-1">
+              <span className="text-sm" aria-hidden="true">{getCountryFlag(detectedCountry)}</span>
+              <span>{detectedCountry}</span>
             </div>
           )}
           

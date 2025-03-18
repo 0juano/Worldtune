@@ -67,4 +67,31 @@ export const formatE164 = (input: string): string => {
   
   const phoneNumber = parsePhoneNumberFromString(inputWithPlus);
   return phoneNumber?.format('E.164') || inputWithPlus;
+};
+
+/**
+ * Converts a country code to its corresponding flag emoji
+ * @param countryCode - The two-letter country code (ISO 3166-1 alpha-2)
+ * @returns - The flag emoji for the country
+ */
+export const getCountryFlag = (countryCode: string | null): string => {
+  if (!countryCode) return '';
+  
+  // Special case for US/CA combined display
+  if (countryCode === 'US/CA') {
+    return '🇺🇸/🇨🇦'; // Show both flags
+  }
+  
+  // For standard country codes, convert to regional indicator symbols
+  // Each country code letter is converted to a regional indicator symbol letter (🇦-🇿)
+  // The magic numbers convert ASCII to the regional indicator symbols
+  try {
+    const countryString = countryCode.toUpperCase();
+    return countryString
+      .split('')
+      .map(char => String.fromCodePoint(char.charCodeAt(0) + 127397))
+      .join('');
+  } catch {
+    return '';
+  }
 }; 

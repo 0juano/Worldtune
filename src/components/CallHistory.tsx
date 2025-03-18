@@ -72,7 +72,7 @@ export const CallHistory: React.FC = () => {
   // Refresh call history when component mounts
   useEffect(() => {
     fetchCallHistory();
-  }, [fetchCallHistory]);
+  }, []);
   
   const getCallIcon = (type: CallHistoryItem['type']) => {
     switch (type) {
