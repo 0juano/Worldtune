@@ -174,9 +174,43 @@ export const Dial: React.FC = () => {
       // Detect country
       const country = detectCountryFromNumber(rawNumber);
       
-      // For +1 numbers, show combined US/CA label
-      if (rawNumber.startsWith('+1') && (country === 'US' || country === 'CA')) {
-        setDetectedCountry('US/CA');
+      // Enhanced NANP country handling
+      if (rawNumber.startsWith('+1')) {
+        // Known NANP Caribbean/territory area codes
+        const nonUSCAAreaCodes = [
+          '242', // Bahamas
+          '246', // Barbados 
+          '264', // Anguilla
+          '268', // Antigua and Barbuda
+          '284', // British Virgin Islands
+          '340', // US Virgin Islands
+          '345', // Cayman Islands
+          '441', // Bermuda
+          '473', // Grenada
+          '649', // Turks and Caicos
+          '658', // Jamaica (additional)
+          '664', // Montserrat
+          '721', // Sint Maarten
+          '758', // Saint Lucia
+          '767', // Dominica
+          '784', // Saint Vincent and Grenadines
+          '787', '939', // Puerto Rico
+          '809', '829', '849', // Dominican Republic
+          '868', // Trinidad and Tobago
+          '869', // Saint Kitts and Nevis
+          '876', // Jamaica
+        ];
+        
+        // Extract area code (positions 2-4 in a +1 number)
+        const areaCode = rawNumber.length >= 5 ? rawNumber.substring(2, 5) : '';
+        
+        // If it's a known Caribbean/territory area code, use the specific country
+        // Otherwise, assume it's US/CA
+        if (areaCode && nonUSCAAreaCodes.includes(areaCode)) {
+          setDetectedCountry(country); // Use the detected country for Caribbean/territories
+        } else {
+          setDetectedCountry('US/CA'); // Default to US/CA for all other +1 numbers
+        }
       } else {
         setDetectedCountry(country);
       }
