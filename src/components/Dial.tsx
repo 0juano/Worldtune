@@ -84,6 +84,7 @@ export const Dial: React.FC = () => {
   const [callDuration, setCallDuration] = useState('00:00');
   const [showAddCredits, setShowAddCredits] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [showInvalidToast, setShowInvalidToast] = useState(false);
   const { credits, decrementCredits, getUSDValue } = useCreditsStore();
   const { addCall } = useCallHistory();
   const { dialInitialNumber } = useNavigationStore();
@@ -169,18 +170,28 @@ export const Dial: React.FC = () => {
   // Handle formatting whenever the raw number changes
   useEffect(() => {
     if (rawNumber) {
+      // Create a sanitized version of the raw number
+      let sanitizedNumber = rawNumber;
+      
+      // Prevent +0 at the beginning of any number
+      if (sanitizedNumber === '+0') {
+        sanitizedNumber = '+';
+        // Update the raw number but continue processing with the sanitized version
+        setRawNumber(sanitizedNumber);
+      }
+      
       // Apply international formatting
-      const formatted = formatInternationalPhoneNumber(rawNumber);
+      const formatted = formatInternationalPhoneNumber(sanitizedNumber);
       setFormattedNumber(formatted);
       
       // Check validity
-      setIsValidNumber(validatePhoneNumber(rawNumber));
+      setIsValidNumber(validatePhoneNumber(sanitizedNumber));
       
       // Detect country
-      const country = detectCountryFromNumber(rawNumber);
+      const country = detectCountryFromNumber(sanitizedNumber);
       
       // Enhanced NANP country handling
-      if (rawNumber.startsWith('+1')) {
+      if (sanitizedNumber.startsWith('+1')) {
         // Known NANP Caribbean/territory area codes
         const nonUSCAAreaCodes = [
           '242', // Bahamas
@@ -207,7 +218,7 @@ export const Dial: React.FC = () => {
         ];
         
         // Extract area code (positions 2-4 in a +1 number)
-        const areaCode = rawNumber.length >= 5 ? rawNumber.substring(2, 5) : '';
+        const areaCode = sanitizedNumber.length >= 5 ? sanitizedNumber.substring(2, 5) : '';
         
         // If it's a known Caribbean/territory area code, use the specific country
         // Otherwise, assume it's US/CA
@@ -331,6 +342,7 @@ export const Dial: React.FC = () => {
   };
 
   const handleDigitPress = (digit: string) => {
+    // Play DTMF tone first for immediate feedback
     playDTMFTone(digit);
     
     // For all digits except '+', also give haptic feedback if available
@@ -339,12 +351,32 @@ export const Dial: React.FC = () => {
     }
     
     setRawNumber(prev => {
+      // Special case: if previous input was '+' and user tries to enter '0'
+      if (prev === '+' && digit === '0') {
+        // Show invalid toast briefly
+        setShowInvalidToast(true);
+        setTimeout(() => setShowInvalidToast(false), 2000);
+        
+        // Return unchanged - don't add the 0
+        return prev;
+      }
+      
       // Check if adding this digit would create or continue a number starting with '00'
       const newNumber = prev + digit;
       
       // If the number starts with '00', replace it with '+'
       if (newNumber.startsWith('00')) {
         return '+' + newNumber.substring(2);
+      }
+      
+      // Make sure the transformed number doesn't result in +0
+      if (newNumber === '+0') {
+        // Show invalid toast briefly
+        setShowInvalidToast(true);
+        setTimeout(() => setShowInvalidToast(false), 2000);
+        
+        // Return just the + without the 0
+        return '+';
       }
       
       return newNumber;
@@ -755,6 +787,13 @@ export const Dial: React.FC = () => {
       <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-2 xs:px-3 sm:px-4 pt-6 xs:pt-8 sm:pt-10 pb-3 xs:pb-4 sm:pb-6 sm:px-6 sm:pb-8">
         {/* Fixed height container for timer and number display */}
         <div className="h-20 xs:h-24 sm:h-28 flex flex-col justify-end w-full mb-3 xs:mb-4 sm:mb-5">
+          {/* Invalid entry toast notification */}
+          {showInvalidToast && (
+            <div className="mb-2 text-xs text-center text-amber-600 dark:text-amber-400 animate-fade-in-out">
+              No valid international numbers start with +0
+            </div>
+          )}
+          
           {/* Call timer display when call is active */}
           {isCallActive && (
             <div className="mb-2 xs:mb-3 sm:mb-4 flex items-center justify-center rounded-full bg-wise-green/20 px-3 py-1 xs:px-4 xs:py-2 w-fit mx-auto">

@@ -69,6 +69,11 @@
   .number-deleted {
     animation: number-shake 0.5s cubic-bezier(0.36, 0, 0.66, -0.56);
   }
+  
+  /* Toast animation */
+  .animate-fade-in-out {
+    animation: fadeInOut 2s ease-in-out forwards;
+  }
 }
 
 @keyframes number-fade-in {
@@ -104,6 +109,14 @@
   40%, 80% {
     transform: translateX(2px);
   }
+}
+
+/* Toast notification animation */
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
 }
 
 .skeleton {

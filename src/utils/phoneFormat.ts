@@ -18,8 +18,21 @@ export const formatInternationalPhoneNumber = (input: string): string => {
   // If input is empty, return empty string
   if (!input) return '';
 
+  // Sanitize input - handle edge cases before adding the + sign
+  const sanitizedInput = input;
+  
+  // Handle the case where input is just '0'
+  if (sanitizedInput === '0') {
+    return '+';
+  }
+  
   // Ensure we start with a '+' for international format
-  const inputWithPlus = input.startsWith('+') ? input : `+${input}`;
+  const inputWithPlus = sanitizedInput.startsWith('+') ? sanitizedInput : `+${sanitizedInput}`;
+  
+  // Prevent international numbers starting with +0 (which are invalid)
+  if (inputWithPlus.startsWith('+0')) {
+    return '+';
+  }
   
   // Use AsYouType formatter which formats numbers as they are typed
   // No try/catch needed here as AsYouType doesn't throw errors on invalid input
