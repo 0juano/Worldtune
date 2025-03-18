@@ -253,8 +253,21 @@ export const Dial: React.FC = () => {
     source.start();
   };
 
+  // Try to trigger haptic feedback if available (for mobile devices)
+  const triggerHapticFeedback = () => {
+    if (window.navigator && window.navigator.vibrate) {
+      // Light vibration for 50ms
+      window.navigator.vibrate(50);
+    }
+  };
+
   const handleDigitPress = (digit: string) => {
     playDTMFTone(digit);
+    
+    // For all digits except '+', also give haptic feedback if available
+    if (digit !== '+') {
+      triggerHapticFeedback();
+    }
     
     setNumber(prev => {
       // Check if adding this digit would create or continue a number starting with '00'
@@ -418,32 +431,115 @@ export const Dial: React.FC = () => {
   const DialButton: React.FC<{ digit: string; letters?: string }> = ({ digit, letters }) => {
     const [isLongPress, setIsLongPress] = useState(false);
     const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+    const [isLongPressActive, setIsLongPressActive] = useState(false);
+    const [longPressProgress, setLongPressProgress] = useState(0);
+    const animationRef = useRef<number | null>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
     
-    const handleTouchStart = (e: React.TouchEvent) => {
-      e.preventDefault(); // Prevent default to stop text selection
+    // Setup touch event listeners with passive: false
+    useEffect(() => {
+      const button = buttonRef.current;
+      if (!button || digit !== '0' || !letters || letters !== '+') return;
       
-      if (digit === '0' && letters === '+') {
+      const startHandler = (e: TouchEvent) => {
+        e.preventDefault(); // Now this will work with passive: false
+        const startTime = Date.now();
+        setIsLongPressActive(true);
+        setLongPressProgress(0);
+        
+        // Start progress animation
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+        animationRef.current = requestAnimationFrame(() => animateLongPress(startTime));
+        
+        // Set up the timer for actual action
         longPressTimer.current = setTimeout(() => {
           setIsLongPress(true);
+          
+          // Trigger haptic feedback for the long press
+          triggerHapticFeedback();
+          
+          // Play the DTMF tone for '+'
           playDTMFTone('+');
-          setNumber(prev => prev + '+');
-        }, 800);
+          
+          setNumber(prev => {
+            // If the number already ends with a 0, replace it with +
+            if (prev.endsWith('0')) {
+              return prev.slice(0, -1) + '+';
+            }
+            // Otherwise add the +
+            return prev + '+';
+          });
+        }, 800); // 800ms long press
+      };
+      
+      const endHandler = () => {
+        setIsLongPressActive(false);
+        setLongPressProgress(0);
+        
+        if (longPressTimer.current) {
+          clearTimeout(longPressTimer.current);
+          longPressTimer.current = null;
+        }
+        
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+          animationRef.current = null;
+        }
+        
+        if (!isLongPress) {
+          handleDigitPress('0');
+        }
+        
+        setIsLongPress(false);
+      };
+      
+      const cancelHandler = () => {
+        setIsLongPressActive(false);
+        setLongPressProgress(0);
+        
+        if (longPressTimer.current) {
+          clearTimeout(longPressTimer.current);
+          longPressTimer.current = null;
+        }
+        
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+          animationRef.current = null;
+        }
+        
+        setIsLongPress(false);
+      };
+      
+      // Add event listeners with passive: false
+      button.addEventListener('touchstart', startHandler, { passive: false });
+      button.addEventListener('touchend', endHandler);
+      button.addEventListener('touchcancel', cancelHandler);
+      
+      return () => {
+        // Clean up event listeners
+        button.removeEventListener('touchstart', startHandler);
+        button.removeEventListener('touchend', endHandler);
+        button.removeEventListener('touchcancel', cancelHandler);
+      };
+    }, [digit, letters, isLongPress]);
+    
+    // Function to animate long press progress
+    const animateLongPress = (startTime: number) => {
+      const duration = 800; // Match the timeout duration
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      setLongPressProgress(progress);
+      
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(() => animateLongPress(startTime));
       }
     };
     
-    const handleTouchEnd = () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-      }
-      
-      if (!isLongPress && digit === '0') {
-        handleDigitPress('0');
-      }
-      
-      setIsLongPress(false);
-    };
-    
+    // Handle click (for non-touch devices)
     const handleClick = () => {
       // Only handle click for non-zero buttons or if not on mobile
       if (digit !== '0' || !('ontouchstart' in window)) {
@@ -453,14 +549,30 @@ export const Dial: React.FC = () => {
 
     return (
       <button
-        className="flex h-20 w-20 select-none flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm dark:bg-gray-800 dark:text-wise-green focus-ring touch-manipulation"
+        ref={buttonRef}
+        className={`flex h-20 w-20 select-none flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm dark:bg-gray-800 dark:text-wise-green focus-ring touch-manipulation ${
+          isLongPressActive ? 'bg-gray-100 dark:bg-gray-700' : ''
+        } relative overflow-hidden`}
         style={{ transform: 'scale(1)' }}
         onClick={handleClick}
-        onTouchStart={digit === '0' && letters === '+' ? handleTouchStart : undefined}
-        onTouchEnd={digit === '0' && letters === '+' ? handleTouchEnd : undefined}
       >
+        {/* Progress indicator for long press */}
+        {isLongPressActive && longPressProgress > 0 && digit === '0' && (
+          <div 
+            className="absolute bottom-0 left-0 h-1 bg-wise-green transition-all"
+            style={{ width: `${longPressProgress * 100}%` }}
+          />
+        )}
+        
         <span className="text-2xl font-medium">{digit}</span>
-        {letters && <span className="text-xs text-gray-500 dark:text-gray-400">{letters}</span>}
+        {letters && (
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {letters}
+            {digit === '0' && letters === '+' && isLongPressActive && (
+              <span className="ml-1 opacity-90 text-wise-green">...</span>
+            )}
+          </span>
+        )}
       </button>
     );
   };
