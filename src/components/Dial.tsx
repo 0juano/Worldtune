@@ -475,6 +475,7 @@ export const Dial: React.FC = () => {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isLongPressRef = useRef(false);
+    const touchActivatedRef = useRef(false);
 
     const handleMouseDown = () => {
       if (!onLongPress) return;
@@ -496,6 +497,41 @@ export const Dial: React.FC = () => {
         onClick();
       }
     };
+    
+    const handleTouchStart = () => {
+      // Mark that the button was activated by touch
+      touchActivatedRef.current = true;
+      
+      // Call the existing handler
+      handleMouseDown();
+    };
+    
+    const handleTouchEnd = (e: React.TouchEvent) => {
+      // Prevent the click event from firing
+      e.preventDefault();
+      
+      // Call the existing handler
+      handleMouseUp();
+      
+      // Reset the touch activated flag after a short delay
+      setTimeout(() => {
+        touchActivatedRef.current = false;
+      }, 300);
+    };
+    
+    const handleClick = (e: React.MouseEvent) => {
+      // If the button was activated by touch, prevent the click handler from firing
+      if (touchActivatedRef.current) {
+        e.preventDefault();
+        return;
+      }
+      
+      // Only execute onClick if onLongPress isn't defined
+      // (matching the original behavior)
+      if (!onLongPress) {
+        onClick();
+      }
+    };
 
     // Extract base color classes without hover effects
     const baseClasses = color.split(' ').filter(cls => !cls.startsWith('hover:') && !cls.startsWith('dark:hover:')).join(' ');
@@ -503,11 +539,11 @@ export const Dial: React.FC = () => {
     return (
       <button
         ref={buttonRef}
-        onClick={onLongPress ? undefined : onClick}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        onTouchStart={handleMouseDown}
-        onTouchEnd={handleMouseUp}
+        onClick={handleClick}
+        onMouseDown={onLongPress ? handleMouseDown : undefined}
+        onMouseUp={onLongPress ? handleMouseUp : undefined}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         className={cn(
           "flex h-20 w-20 flex-col items-center justify-center rounded-full focus-ring select-none touch-manipulation",
           baseClasses
