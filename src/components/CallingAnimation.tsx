@@ -12,6 +12,8 @@ interface CallingAnimationProps {
 // This will persist even if the component remounts
 let hasGlobalPickupOccurred = false;
 let pickupTimeoutId: NodeJS.Timeout | null = null;
+// Track if hangup is in progress to avoid double calls
+let isHangingUp = false;
 
 export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber, onClose, onPickup }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -25,8 +27,8 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
 
   // Function to handle pickup (defined outside useEffect)
   const handlePickup = () => {
-    // Only proceed if we haven't already picked up
-    if (hasGlobalPickupOccurred) {
+    // Only proceed if we haven't already picked up and we're not hanging up
+    if (hasGlobalPickupOccurred || isHangingUp) {
       return;
     }
     
@@ -46,9 +48,57 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
     onPickup();
   };
 
+  // Handle clean hangup with enough time for the sound to play
+  const cleanHangup = async () => {
+    // If already hanging up, don't do it again
+    if (isHangingUp) return;
+    
+    // Set hanging up flag
+    isHangingUp = true;
+    
+    // Clear the pickup timeout
+    if (pickupTimeoutId) {
+      clearTimeout(pickupTimeoutId);
+      pickupTimeoutId = null;
+    }
+    
+    // Play hang-up sound
+    if (hangupAudioRef.current) {
+      try {
+        // Get the audio duration
+        await hangupAudioRef.current.load();
+        const duration = hangupAudioRef.current.duration || 1;
+        
+        // Start playing
+        await hangupAudioRef.current.play();
+        
+        // Wait for the sound to finish (add a small buffer)
+        const waitTime = Math.max(1000, duration * 1000 + 200);
+        
+        // Set a timeout for the duration of the audio plus a buffer
+        setTimeout(() => {
+          // Reset the hanging up flag
+          isHangingUp = false;
+          
+          // Close the component
+          onClose();
+        }, waitTime);
+      } catch (error) {
+        // If there's an error, just close
+        isHangingUp = false;
+        onClose();
+      }
+    } else {
+      // No sound, just close
+      isHangingUp = false;
+      onClose();
+    }
+  };
+
   // Reset the global pickup flag when the component mounts for the first time
   useEffect(() => {
     hasGlobalPickupOccurred = false;
+    isHangingUp = false;
     
     // Clear any existing timeout from previous instances
     if (pickupTimeoutId) {
@@ -61,10 +111,10 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
     }, 3000);
     
     return () => {
-      // Do not set isUnmounting to true as it was causing issues
       // Just clean up timers
       if (pickupTimeoutId) {
         clearTimeout(pickupTimeoutId);
+        pickupTimeoutId = null;
       }
     };
   }, []);
@@ -116,17 +166,8 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
     // Handle escape key
     const handleKeyDown = async (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (hangupAudioRef.current) {
-          try {
-            await hangupAudioRef.current.play();
-            // Wait for the hang-up sound to finish before closing
-            setTimeout(onClose, 500);
-          } catch {
-            onClose();
-          }
-        } else {
-          onClose();
-        }
+        // Use the clean hangup function
+        cleanHangup();
       }
     };
 
@@ -135,7 +176,7 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       
-      // Clean up audio resources
+      // Clean up audio resources, but don't stop playing hangup sound
       if (audioRef.current) {
         try {
           const audio = audioRef.current;
@@ -148,39 +189,10 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
         }
       }
       
-      if (hangupAudioRef.current) {
-        try {
-          const hangupAudio = hangupAudioRef.current;
-          hangupAudioRef.current = null;
-          hangupAudio.pause();
-          hangupAudio.src = '';
-          hangupAudio.load();
-        } catch {
-          // Silent error handling
-        }
-      }
+      // Don't clean up hangup audio here as it needs to continue playing
+      // The next component will handle creating a new audio instance
     };
   }, [onClose]);
-
-  const handleEndCall = async () => {
-    // Clear the pickup timeout when call is ended manually
-    if (pickupTimeoutId) {
-      clearTimeout(pickupTimeoutId);
-      pickupTimeoutId = null;
-    }
-    
-    if (hangupAudioRef.current) {
-      try {
-        await hangupAudioRef.current.play();
-        // Wait for the hang-up sound to finish before closing
-        setTimeout(onClose, 500);
-      } catch {
-        onClose();
-      }
-    } else {
-      onClose();
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -217,7 +229,7 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
           
           <div className="flex justify-center mt-8">
             <button
-              onClick={handleEndCall}
+              onClick={cleanHangup}
               className="flex items-center gap-2 rounded-full bg-red-500 px-6 py-3 text-white transition-colors hover:bg-red-600 active:scale-95"
             >
               <PhoneOff className="h-6 w-6" />
