@@ -173,7 +173,13 @@ export const Dial: React.FC = () => {
       
       // Detect country
       const country = detectCountryFromNumber(rawNumber);
-      setDetectedCountry(country);
+      
+      // For +1 numbers, show combined US/CA label
+      if (rawNumber.startsWith('+1') && (country === 'US' || country === 'CA')) {
+        setDetectedCountry('US/CA');
+      } else {
+        setDetectedCountry(country);
+      }
     } else {
       setFormattedNumber('');
       setIsValidNumber(false);
