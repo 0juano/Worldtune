@@ -7,6 +7,7 @@ import { useCreditsStore } from '../store/useCreditsStore';
 import { CallingAnimation } from './CallingAnimation';
 import { useCallHistory } from '../contexts/CallHistoryContext';
 import { useNavigationStore } from '../store/useNavigationStore';
+import { useDialStore } from '../store/useDialStore';
 
 // Create a single AudioContext instance
 // Using type assertion to handle the webkitAudioContext
@@ -74,10 +75,10 @@ export const Dial: React.FC = () => {
   const [callDuration, setCallDuration] = useState('00:00');
   const [showAddCredits, setShowAddCredits] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [centerOffset, setCenterOffset] = useState({ left: 0, width: 0 });
   const { credits, decrementCredits, getUSDValue } = useCreditsStore();
   const { addCall } = useCallHistory();
   const { dialInitialNumber } = useNavigationStore();
+  const { centerOffset, setCenterOffset } = useDialStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioTrackRef = useRef<MediaStreamTrack | null>(null);
@@ -117,7 +118,7 @@ export const Dial: React.FC = () => {
       clearTimeout(timeoutId);
       window.removeEventListener('resize', updateOffset);
     };
-  }, []);
+  }, [setCenterOffset]);
 
   // Call timer effect
   useEffect(() => {
@@ -703,27 +704,7 @@ export const Dial: React.FC = () => {
       )}
 
       {showAddCredits && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" 
-          onClick={(e) => {
-            // Only close if clicking the backdrop, not the modal itself
-            if (e.target === e.currentTarget) {
-              setShowAddCredits(false);
-            }
-          }}
-        >
-          <div 
-            className="px-4 sm:px-6"
-            style={{
-              transform: `translateX(${centerOffset.left}px)`,
-              width: centerOffset.width > 0 ? centerOffset.width : '100%',
-              maxWidth: '480px'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <AddCredits onClose={() => setShowAddCredits(false)} />
-          </div>
-        </div>
+        <AddCredits onClose={() => setShowAddCredits(false)} />
       )}
 
       {aiWaiting && (
