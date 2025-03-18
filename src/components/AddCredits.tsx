@@ -163,7 +163,7 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <p className="font-medium">Selected Package</p>
           <p className="text-lg font-bold mt-1">USD {selectedPackage.price}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Approximately {selectedPackage.minMinutes}-{selectedPackage.maxMinutes} minutes of call time
+            ~{Math.round(selectedPackage.minMinutes/60)}-{Math.round(selectedPackage.maxMinutes/60)} hrs of call time
           </p>
         </div>
         
@@ -290,7 +290,7 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <p className="font-medium">Amount</p>
           <p className="text-lg font-bold mt-1">USD {selectedPackage.price}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Approximately {selectedPackage.minMinutes}-{selectedPackage.maxMinutes} minutes of call time
+            ~{Math.round(selectedPackage.minMinutes/60)}-{Math.round(selectedPackage.maxMinutes/60)} hrs of call time
           </p>
         </div>
         
@@ -340,8 +340,8 @@ export const AddCredits: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   : 'border-gray-200 dark:border-gray-700'
               }`}
             >
-              <span className="text-2xl font-bold">USD {pkg.price}</span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">{pkg.minMinutes}-{pkg.maxMinutes} min</span>
+              <span className="text-xl font-bold">USD {pkg.price}</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">~{Math.round(pkg.minMinutes/60)}-{Math.round(pkg.maxMinutes/60)} hrs</span>
             </button>
           ))}
         </div>
