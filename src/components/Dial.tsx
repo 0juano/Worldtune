@@ -562,9 +562,9 @@ export const Dial: React.FC = () => {
 
   return (
     <>
-      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-4 py-8 sm:px-6 sm:py-12">
+      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-4 pt-2 pb-6 sm:px-6 sm:pt-4 sm:pb-8 relative -top-4 sm:-top-6">
         {/* Fixed height container for timer and number display */}
-        <div className="h-24 flex flex-col justify-end w-full mb-8">
+        <div className="h-24 flex flex-col justify-end w-full mb-5">
           {/* Call timer display when call is active */}
           {isCallActive && (
             <div className="mb-4 flex items-center justify-center rounded-full bg-wise-green/20 px-4 py-2 w-fit mx-auto">
@@ -588,7 +588,7 @@ export const Dial: React.FC = () => {
           </div>
         </div>
 
-        <div className="mb-4 grid grid-cols-3 gap-4 sm:gap-6">
+        <div className="mb-3 grid grid-cols-3 gap-4 sm:gap-6">
           <DialButton digit="1" />
           <DialButton digit="2" letters="ABC" />
           <DialButton digit="3" letters="DEF" />
@@ -603,7 +603,7 @@ export const Dial: React.FC = () => {
           <DialButton digit="#" />
         </div>
 
-        <div className="mb-8 grid grid-cols-3 gap-4 sm:gap-6">
+        <div className="mb-6 grid grid-cols-3 gap-4 sm:gap-6">
           {isCallActive && (
             <ActionButton
               onClick={toggleMute}
