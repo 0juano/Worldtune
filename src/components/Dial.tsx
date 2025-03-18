@@ -568,15 +568,20 @@ export const Dial: React.FC = () => {
         </div>
 
         <div className="mb-8 grid grid-cols-3 gap-4 sm:gap-6">
-          <ActionButton
-            onClick={toggleMute}
-            icon={isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-            color={isMuted 
-              ? "bg-blue-700 text-white dark:bg-wise-blue/60 dark:text-white"
-              : "bg-wise-blue text-wise-forest dark:bg-wise-blue/80 dark:text-wise-forest"
-            }
-            label={isMuted ? "Unmute microphone" : "Mute microphone"}
-          />
+          {isCallActive && (
+            <ActionButton
+              onClick={toggleMute}
+              icon={isMuted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+              color={isMuted 
+                ? "bg-blue-700 text-white dark:bg-wise-blue/60 dark:text-white"
+                : "bg-wise-blue text-wise-forest dark:bg-wise-blue/80 dark:text-wise-forest"
+              }
+              label={isMuted ? "Unmute microphone" : "Mute microphone"}
+            />
+          )}
+          {!isCallActive && (
+            <div></div> // Empty placeholder when mute button is not shown
+          )}
           {isCallActive ? (
             <ActionButton
               onClick={handleEndCall}
@@ -592,13 +597,18 @@ export const Dial: React.FC = () => {
               label="Audio call"
             />
           )}
-          <ActionButton
-            onClick={handleDelete}
-            icon={<Delete className="h-6 w-6" />}
-            color="bg-red-200 text-red-700 dark:bg-wise-pink/10 dark:text-wise-pink"
-            label="Delete"
-            onLongPress={() => true}
-          />
+          {number.length > 0 && (
+            <ActionButton
+              onClick={handleDelete}
+              icon={<Delete className="h-6 w-6" />}
+              color="bg-red-200 text-red-700 dark:bg-wise-pink/10 dark:text-wise-pink"
+              label="Delete"
+              onLongPress={() => true}
+            />
+          )}
+          {number.length === 0 && (
+            <div></div> // Empty placeholder when delete button is not shown
+          )}
         </div>
 
         {/* Credits pill centered below all buttons */}
