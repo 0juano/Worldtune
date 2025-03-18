@@ -675,7 +675,7 @@ export const Dial: React.FC = () => {
 
   return (
     <>
-      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-4 pt-2 pb-6 sm:px-6 sm:pt-4 sm:pb-8 relative -top-4 sm:-top-6">
+      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-4 pt-6 pb-6 sm:px-6 sm:pt-8 sm:pb-8">
         {/* Fixed height container for timer and number display */}
         <div className="h-24 flex flex-col justify-end w-full mb-5">
           {/* Call timer display when call is active */}
@@ -822,7 +822,7 @@ export const Dial: React.FC = () => {
       {aiWaiting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div 
-            className="px-4 sm:px-6"
+            className="px-4 sm:px-6 mt-8"
             style={{
               transform: `translateX(${centerOffset.left}px)`,
               width: centerOffset.width > 0 ? centerOffset.width : '100%',
@@ -841,7 +841,7 @@ export const Dial: React.FC = () => {
       {isCalling && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div 
-            className="px-4 sm:px-6"
+            className="px-4 sm:px-6 mt-8"
             style={{
               transform: `translateX(${centerOffset.left}px)`,
               width: centerOffset.width > 0 ? centerOffset.width : '100%',
