@@ -8,6 +8,7 @@ import { CallingAnimation } from './CallingAnimation';
 import { useCallHistory } from '../contexts/CallHistoryContext';
 import { useNavigationStore } from '../store/useNavigationStore';
 import { useDialStore } from '../store/useDialStore';
+import { formatInternationalPhoneNumber, validatePhoneNumber, detectCountryFromNumber } from '../utils/phoneFormat';
 
 // Create a single AudioContext instance
 // Using type assertion to handle the webkitAudioContext
@@ -65,7 +66,10 @@ const createDTMFTone = (key: string) => {
 };
 
 export const Dial: React.FC = () => {
-  const [number, setNumber] = useState('');
+  const [rawNumber, setRawNumber] = useState('');
+  const [formattedNumber, setFormattedNumber] = useState('');
+  const [isValidNumber, setIsValidNumber] = useState(false);
+  const [detectedCountry, setDetectedCountry] = useState<string | null>(null);
   const [showPromptInput, setShowPromptInput] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiWaiting, setAiWaiting] = useState(false);
@@ -153,9 +157,29 @@ export const Dial: React.FC = () => {
   useEffect(() => {
     if (dialInitialNumber && !isCallActive) {
       // Set the number from navigation but don't auto-start the call
-      setNumber(dialInitialNumber);
+      setRawNumber(dialInitialNumber);
     }
   }, [dialInitialNumber, isCallActive]);
+
+  // Handle formatting whenever the raw number changes
+  useEffect(() => {
+    if (rawNumber) {
+      // Apply international formatting
+      const formatted = formatInternationalPhoneNumber(rawNumber);
+      setFormattedNumber(formatted);
+      
+      // Check validity
+      setIsValidNumber(validatePhoneNumber(rawNumber));
+      
+      // Detect country
+      const country = detectCountryFromNumber(rawNumber);
+      setDetectedCountry(country);
+    } else {
+      setFormattedNumber('');
+      setIsValidNumber(false);
+      setDetectedCountry(null);
+    }
+  }, [rawNumber]);
 
   // Keyboard support
   useEffect(() => {
@@ -178,7 +202,7 @@ export const Dial: React.FC = () => {
         handleDelete();
       }
       // Handle Enter key for making a call
-      else if (e.key === 'Enter' && number.length > 0 && !isCallActive) {
+      else if (e.key === 'Enter' && rawNumber.length > 0 && !isCallActive) {
         handleCall('audio');
       }
       // Handle Escape key for ending a call
@@ -191,7 +215,7 @@ export const Dial: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [number, isCallActive]); // Re-add event listener when these dependencies change
+  }, [rawNumber, isCallActive]); // Re-add event listener when these dependencies change
 
   // Set up microphone functionality when call is active
   useEffect(() => {
@@ -269,7 +293,7 @@ export const Dial: React.FC = () => {
       triggerHapticFeedback();
     }
     
-    setNumber(prev => {
+    setRawNumber(prev => {
       // Check if adding this digit would create or continue a number starting with '00'
       const newNumber = prev + digit;
       
@@ -283,13 +307,13 @@ export const Dial: React.FC = () => {
   };
 
   const handleDelete = () => {
-    if (number.length > 0) {
-      setNumber(prev => prev.slice(0, -1));
+    if (rawNumber.length > 0) {
+      setRawNumber(prev => prev.slice(0, -1));
     }
   };
 
   const handleCall = (type: 'audio' | 'ai') => {
-    if (number.length === 0) return;
+    if (rawNumber.length === 0) return;
     
     if (isCallActive) {
       // End the call
@@ -309,8 +333,8 @@ export const Dial: React.FC = () => {
       // Start the call
       setIsCalling(true);
       
-      // Record the outgoing call in history immediately
-      addCall(number, 0, 'outgoing');
+      // Use formatted number for display in history
+      addCall(formattedNumber || rawNumber, 0, 'outgoing');
     }
   };
 
@@ -366,8 +390,8 @@ export const Dial: React.FC = () => {
       const callType = aiWaiting ? 'ai' : 'outgoing'; // We only support outgoing calls for now
       
       // Only record if there's a number or if it's an AI call
-      if (number || callType === 'ai') {
-        addCall(number || 'Unknown', durationInSeconds, callType);
+      if (formattedNumber || callType === 'ai') {
+        addCall(formattedNumber || 'Unknown', durationInSeconds, callType);
       }
     }
     
@@ -376,7 +400,7 @@ export const Dial: React.FC = () => {
     setCallDuration('00:00');
     setIsCalling(false);
     setAiWaiting(false);
-    setNumber(''); // Reset the number when hanging up
+    setRawNumber(''); // Reset the number when hanging up
     
     // Clean up microphone when call ends
     if (micStreamRef.current) {
@@ -398,7 +422,7 @@ export const Dial: React.FC = () => {
     decrementCredits();
     
     // Record the call in history
-    addCall(number, 0, 'outgoing');
+    addCall(formattedNumber || rawNumber, 0, 'outgoing');
   };
 
   // Toggle microphone mute/unmute
@@ -463,7 +487,7 @@ export const Dial: React.FC = () => {
           // Play the DTMF tone for '+'
           playDTMFTone('+');
           
-          setNumber(prev => {
+          setRawNumber(prev => {
             // If the number already ends with a 0, replace it with +
             if (prev.endsWith('0')) {
               return prev.slice(0, -1) + '+';
@@ -541,8 +565,12 @@ export const Dial: React.FC = () => {
     
     // Handle click (for non-touch devices)
     const handleClick = () => {
-      // Only handle click for non-zero buttons or if not on mobile
-      if (digit !== '0' || !('ontouchstart' in window)) {
+      // Updated logic to work correctly on all devices
+      // For desktop browsers without touch support, handle all digits
+      // For touch devices, still handle all digits except '0' which is handled by touchstart/touchend
+      const isTouchDevice = 'ontouchstart' in window;
+      
+      if (!isTouchDevice || digit !== '0') {
         handleDigitPress(digit);
       }
     };
@@ -597,7 +625,7 @@ export const Dial: React.FC = () => {
       isLongPressRef.current = false;
       timeoutRef.current = setTimeout(() => {
         isLongPressRef.current = true;
-        setNumber('');
+        setRawNumber('');
       }, 1000);
     };
 
@@ -690,12 +718,26 @@ export const Dial: React.FC = () => {
               </span>
             </div>
           )}
+
+          {/* Country indicator (small and subtle) */}
+          {detectedCountry && (
+            <div className="text-xs text-center text-gray-500 dark:text-gray-400 mb-1">
+              {detectedCountry}
+            </div>
+          )}
           
-          {/* Number display */}
+          {/* Number display - using formatted number instead of raw */}
           <div className="w-full text-center">
-            {number ? (
-              <div className="text-2xl xs:text-3xl font-medium text-wise-forest dark:text-wise-green sm:text-4xl">
-                {number}
+            {formattedNumber ? (
+              <div 
+                className={cn(
+                  "text-2xl xs:text-3xl font-medium sm:text-4xl",
+                  isValidNumber 
+                    ? "text-wise-forest dark:text-wise-green" 
+                    : "text-amber-600 dark:text-amber-400"
+                )}
+              >
+                {formattedNumber}
               </div>
             ) : (
               <div className="text-2xl xs:text-3xl font-medium text-gray-400 dark:text-gray-600 sm:text-4xl">
@@ -750,7 +792,7 @@ export const Dial: React.FC = () => {
               label="Audio call"
             />
           )}
-          {number.length > 0 && (
+          {formattedNumber.length > 0 && (
             <ActionButton
               onClick={handleDelete}
               icon={<Delete className="h-6 w-6" />}
@@ -759,7 +801,7 @@ export const Dial: React.FC = () => {
               onLongPress={() => true}
             />
           )}
-          {number.length === 0 && (
+          {formattedNumber.length === 0 && (
             <div></div> // Empty placeholder when delete button is not shown
           )}
         </div>
@@ -834,7 +876,7 @@ export const Dial: React.FC = () => {
             }}
           >
             <AICallAssistant
-              phoneNumber={number}
+              phoneNumber={formattedNumber || rawNumber}
               onJoin={handleJoinCall}
               onEnd={handleEndCall}
             />
@@ -853,7 +895,7 @@ export const Dial: React.FC = () => {
             }}
           >
             <CallingAnimation
-              phoneNumber={number}
+              phoneNumber={formattedNumber || rawNumber}
               onClose={() => {
                 setIsCalling(false);
               }}
