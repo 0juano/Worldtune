@@ -74,6 +74,7 @@ export const Dial: React.FC = () => {
   const [callDuration, setCallDuration] = useState('00:00');
   const [showAddCredits, setShowAddCredits] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [centerOffset, setCenterOffset] = useState({ left: 0, width: 0 });
   const { credits, decrementCredits, getUSDValue } = useCreditsStore();
   const { addCall } = useCallHistory();
   const { dialInitialNumber } = useNavigationStore();
@@ -81,6 +82,42 @@ export const Dial: React.FC = () => {
   const micStreamRef = useRef<MediaStream | null>(null);
   const audioTrackRef = useRef<MediaStreamTrack | null>(null);
   const endCallSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  // Calculate the precise offset needed for the modal to match the numpad
+  useEffect(() => {
+    const updateOffset = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        
+        // Calculate centers
+        const numpadCenterX = rect.left + rect.width / 2;
+        const viewportCenterX = viewportWidth / 2;
+        
+        // Calculate the offset - this is how much we need to shift modals to match numpad center
+        const offset = numpadCenterX - viewportCenterX;
+        
+        setCenterOffset({
+          left: offset,
+          width: rect.width
+        });
+      }
+    };
+    
+    // Update immediately, on resize, and after a short delay to ensure layout is complete
+    updateOffset();
+    
+    // Schedule another update after layout is fully complete
+    const timeoutId = setTimeout(updateOffset, 500);
+    
+    // Add resize listener
+    window.addEventListener('resize', updateOffset);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', updateOffset);
+    };
+  }, []);
 
   // Call timer effect
   useEffect(() => {
@@ -580,31 +617,40 @@ export const Dial: React.FC = () => {
       </div>
 
       {showPromptInput && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md overflow-hidden rounded-4xl bg-white p-6 shadow-xl dark:bg-gray-800">
-            <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-wise-forest dark:text-wise-green">
-              <MessageSquare className="h-5 w-5" />
-              AI Assistant Instructions
-            </h2>
-            <textarea
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              className="mb-4 h-32 w-full rounded-2xl border border-gray-200 bg-white p-3 text-wise-forest focus:border-wise-green focus:outline-none focus:ring-1 focus:ring-wise-green dark:border-gray-700 dark:bg-gray-700 dark:text-wise-green"
-              placeholder="Enter instructions for the AI assistant..."
-            />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowPromptInput(false)}
-                className="rounded-2xl bg-gray-100 px-4 py-2 text-sm font-medium text-wise-forest hover:bg-gray-200 dark:bg-gray-700 dark:text-wise-green dark:hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleStartAICall}
-                className="rounded-2xl bg-wise-green px-4 py-2 text-sm font-medium text-wise-forest hover:bg-wise-green/90 dark:bg-wise-green/80 dark:hover:bg-wise-green/70"
-              >
-                Start AI Call
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div 
+            className="px-4 sm:px-6"
+            style={{
+              transform: `translateX(${centerOffset.left}px)`,
+              width: centerOffset.width > 0 ? centerOffset.width : '100%',
+              maxWidth: '480px'
+            }}
+          >
+            <div className="w-full overflow-hidden rounded-4xl bg-white p-6 shadow-xl dark:bg-gray-800">
+              <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold text-wise-forest dark:text-wise-green">
+                <MessageSquare className="h-5 w-5" />
+                AI Assistant Instructions
+              </h2>
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                className="mb-4 h-32 w-full rounded-2xl border border-gray-200 bg-white p-3 text-wise-forest focus:border-wise-green focus:outline-none focus:ring-1 focus:ring-wise-green dark:border-gray-700 dark:bg-gray-700 dark:text-wise-green"
+                placeholder="Enter instructions for the AI assistant..."
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowPromptInput(false)}
+                  className="rounded-2xl bg-gray-100 px-4 py-2 text-sm font-medium text-wise-forest hover:bg-gray-200 dark:bg-gray-700 dark:text-wise-green dark:hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleStartAICall}
+                  className="rounded-2xl bg-wise-green px-4 py-2 text-sm font-medium text-wise-forest hover:bg-wise-green/90 dark:bg-wise-green/80 dark:hover:bg-wise-green/70"
+                >
+                  Start AI Call
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -612,7 +658,7 @@ export const Dial: React.FC = () => {
 
       {showAddCredits && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm" 
           onClick={(e) => {
             // Only close if clicking the backdrop, not the modal itself
             if (e.target === e.currentTarget) {
@@ -620,30 +666,60 @@ export const Dial: React.FC = () => {
             }
           }}
         >
-          <div onClick={(e) => e.stopPropagation()} className="relative">
+          <div 
+            className="px-4 sm:px-6"
+            style={{
+              transform: `translateX(${centerOffset.left}px)`,
+              width: centerOffset.width > 0 ? centerOffset.width : '100%',
+              maxWidth: '480px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <AddCredits onClose={() => setShowAddCredits(false)} />
           </div>
         </div>
       )}
 
       {aiWaiting && (
-        <AICallAssistant
-          phoneNumber={number}
-          onJoin={handleJoinCall}
-          onEnd={handleEndCall}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div 
+            className="px-4 sm:px-6"
+            style={{
+              transform: `translateX(${centerOffset.left}px)`,
+              width: centerOffset.width > 0 ? centerOffset.width : '100%',
+              maxWidth: '480px'
+            }}
+          >
+            <AICallAssistant
+              phoneNumber={number}
+              onJoin={handleJoinCall}
+              onEnd={handleEndCall}
+            />
+          </div>
+        </div>
       )}
 
       {isCalling && (
-        <CallingAnimation
-          phoneNumber={number}
-          onClose={() => {
-            setIsCalling(false);
-          }}
-          onPickup={() => {
-            handleCallPickup();
-          }}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div 
+            className="px-4 sm:px-6"
+            style={{
+              transform: `translateX(${centerOffset.left}px)`,
+              width: centerOffset.width > 0 ? centerOffset.width : '100%',
+              maxWidth: '480px'
+            }}
+          >
+            <CallingAnimation
+              phoneNumber={number}
+              onClose={() => {
+                setIsCalling(false);
+              }}
+              onPickup={() => {
+                handleCallPickup();
+              }}
+            />
+          </div>
+        </div>
       )}
     </>
   );

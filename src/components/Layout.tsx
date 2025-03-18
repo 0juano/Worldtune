@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { History, Menu, Phone, Settings, X, User } from 'lucide-react';
 import { useNavigationStore } from '../store/useNavigationStore';
@@ -14,6 +14,25 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isLightMode = theme === 'light';
   const isLoginPage = currentView === 'login';
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Set sidebar width as a CSS variable
+  useEffect(() => {
+    const updateSidebarWidth = () => {
+      if (sidebarRef.current) {
+        const sidebarWidth = sidebarRef.current.offsetWidth;
+        document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`);
+      }
+    };
+    
+    // Update immediately and on resize
+    updateSidebarWidth();
+    window.addEventListener('resize', updateSidebarWidth);
+    
+    return () => {
+      window.removeEventListener('resize', updateSidebarWidth);
+    };
+  }, []);
 
   const toggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen);
@@ -168,7 +187,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
         {/* Desktop Sidebar - Only show if not on login page */}
         {!isLoginPage && (
-          <nav className="hidden border-r border-gray-200 bg-gray-100 px-3 py-6 dark:border-gray-800 dark:bg-gray-900 lg:flex lg:fixed lg:h-full lg:w-20 lg:flex-col lg:justify-between">
+          <nav 
+            ref={sidebarRef}
+            className="hidden border-r border-gray-200 bg-gray-100 px-3 py-6 dark:border-gray-800 dark:bg-gray-900 lg:flex lg:fixed lg:h-full lg:w-20 lg:flex-col lg:justify-between"
+          >
             <div className="flex flex-col items-center gap-4">
               <div className="mb-6">
                 <img 

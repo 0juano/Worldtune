@@ -83,7 +83,7 @@ export const CallingAnimation: React.FC<CallingAnimationProps> = ({ phoneNumber,
           // Close the component
           onClose();
         }, waitTime);
-      } catch (error) {
+      } catch {
         // If there's an error, just close
         isHangingUp = false;
         onClose();
