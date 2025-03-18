@@ -747,9 +747,9 @@ export const Dial: React.FC = () => {
 
   return (
     <>
-      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-2 xs:px-3 sm:px-4 pt-3 pb-3 xs:pt-4 xs:pb-4 sm:pt-6 sm:pb-6 sm:px-6 sm:pt-8 sm:pb-8">
+      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-2 xs:px-3 sm:px-4 pt-6 xs:pt-8 sm:pt-10 pb-3 xs:pb-4 sm:pb-6 sm:px-6 sm:pb-8">
         {/* Fixed height container for timer and number display */}
-        <div className="h-16 xs:h-20 sm:h-24 flex flex-col justify-end w-full mb-3 xs:mb-4 sm:mb-5">
+        <div className="h-20 xs:h-24 sm:h-28 flex flex-col justify-end w-full mb-3 xs:mb-4 sm:mb-5">
           {/* Call timer display when call is active */}
           {isCallActive && (
             <div className="mb-2 xs:mb-3 sm:mb-4 flex items-center justify-center rounded-full bg-wise-green/20 px-3 py-1 xs:px-4 xs:py-2 w-fit mx-auto">
