@@ -550,9 +550,10 @@ export const Dial: React.FC = () => {
     return (
       <button
         ref={buttonRef}
-        className={`flex h-20 w-20 select-none flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm dark:bg-gray-800 dark:text-wise-green focus-ring touch-manipulation ${
+        className={`flex select-none flex-col items-center justify-center rounded-full bg-white text-wise-forest shadow-sm dark:bg-gray-800 dark:text-wise-green focus-ring touch-manipulation ${
           isLongPressActive ? 'bg-gray-100 dark:bg-gray-700' : ''
-        } relative overflow-hidden`}
+        } relative overflow-hidden
+        h-16 w-16 xs:h-18 xs:w-18 sm:h-20 sm:w-20`}
         style={{ transform: 'scale(1)' }}
         onClick={handleClick}
       >
@@ -564,9 +565,9 @@ export const Dial: React.FC = () => {
           />
         )}
         
-        <span className="text-2xl font-medium">{digit}</span>
+        <span className="text-xl sm:text-2xl font-medium">{digit}</span>
         {letters && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-2xs xs:text-xs text-gray-500 dark:text-gray-400">
             {letters}
             {digit === '0' && letters === '+' && isLongPressActive && (
               <span className="ml-1 opacity-90 text-wise-green">...</span>
@@ -658,7 +659,8 @@ export const Dial: React.FC = () => {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         className={cn(
-          "flex h-20 w-20 flex-col items-center justify-center rounded-full focus-ring select-none touch-manipulation",
+          "flex flex-col items-center justify-center rounded-full focus-ring select-none touch-manipulation",
+          "h-16 w-16 xs:h-18 xs:w-18 sm:h-20 sm:w-20",
           baseClasses
         )}
         style={{ 
@@ -668,20 +670,22 @@ export const Dial: React.FC = () => {
         }}
         aria-label={label}
       >
-        {icon}
+        <div className="scale-75 xs:scale-90 sm:scale-100">
+          {icon}
+        </div>
       </button>
     );
   };
 
   return (
     <>
-      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-4 pt-6 pb-6 sm:px-6 sm:pt-8 sm:pb-8">
+      <div ref={containerRef} className="mx-auto flex max-w-md flex-col items-center px-2 xs:px-3 sm:px-4 pt-3 pb-3 xs:pt-4 xs:pb-4 sm:pt-6 sm:pb-6 sm:px-6 sm:pt-8 sm:pb-8">
         {/* Fixed height container for timer and number display */}
-        <div className="h-24 flex flex-col justify-end w-full mb-5">
+        <div className="h-16 xs:h-20 sm:h-24 flex flex-col justify-end w-full mb-3 xs:mb-4 sm:mb-5">
           {/* Call timer display when call is active */}
           {isCallActive && (
-            <div className="mb-4 flex items-center justify-center rounded-full bg-wise-green/20 px-4 py-2 w-fit mx-auto">
-              <span className="text-lg font-medium text-wise-forest dark:text-wise-green">
+            <div className="mb-2 xs:mb-3 sm:mb-4 flex items-center justify-center rounded-full bg-wise-green/20 px-3 py-1 xs:px-4 xs:py-2 w-fit mx-auto">
+              <span className="text-base xs:text-lg font-medium text-wise-forest dark:text-wise-green">
                 {callDuration}
               </span>
             </div>
@@ -690,18 +694,18 @@ export const Dial: React.FC = () => {
           {/* Number display */}
           <div className="w-full text-center">
             {number ? (
-              <div className="text-3xl font-medium text-wise-forest dark:text-wise-green sm:text-4xl">
+              <div className="text-2xl xs:text-3xl font-medium text-wise-forest dark:text-wise-green sm:text-4xl">
                 {number}
               </div>
             ) : (
-              <div className="text-3xl font-medium text-gray-400 dark:text-gray-600 sm:text-4xl">
+              <div className="text-2xl xs:text-3xl font-medium text-gray-400 dark:text-gray-600 sm:text-4xl">
                 Enter a number
               </div>
             )}
           </div>
         </div>
 
-        <div className="mb-3 grid grid-cols-3 gap-4 sm:gap-6">
+        <div className="mb-2 xs:mb-3 sm:mb-3 grid grid-cols-3 gap-2 xs:gap-3 sm:gap-4 sm:gap-6">
           <DialButton digit="1" />
           <DialButton digit="2" letters="ABC" />
           <DialButton digit="3" letters="DEF" />
@@ -716,7 +720,7 @@ export const Dial: React.FC = () => {
           <DialButton digit="#" />
         </div>
 
-        <div className="mb-6 grid grid-cols-3 gap-4 sm:gap-6">
+        <div className="mb-3 xs:mb-4 sm:mb-6 grid grid-cols-3 gap-2 xs:gap-3 sm:gap-4 sm:gap-6">
           {isCallActive && (
             <ActionButton
               onClick={toggleMute}
