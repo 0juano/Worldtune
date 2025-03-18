@@ -114,6 +114,7 @@ export const Dial: React.FC = () => {
   // Set initial number from navigation (when returning from call history)
   useEffect(() => {
     if (dialInitialNumber && !isCallActive) {
+      // Set the number from navigation but don't auto-start the call
       setNumber(dialInitialNumber);
     }
   }, [dialInitialNumber, isCallActive]);

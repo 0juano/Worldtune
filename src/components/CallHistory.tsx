@@ -154,7 +154,8 @@ export const CallHistory: React.FC = () => {
                         </p>
                         <button 
                           className="mt-1 rounded-full bg-green-100 p-2 text-green-600 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-400 dark:hover:bg-green-900"
-                          aria-label="Call back"
+                          aria-label="Copy number to dial pad"
+                          title="Copy number to dial pad"
                           onClick={() => handleCallBack(call.phoneNumber)}
                         >
                           <Phone className="h-4 w-4" />
